@@ -31,15 +31,12 @@ jobs:
             npm install || true
           fi
 
-      - name: Lint (if configured)
-        run: |
-          npm run lint || echo "Lint step skipped or failed (no config)."
+      - name: Lint
+        run: npm run -s lint
 
-      - name: Run tests (if configured)
-        run: |
-          npm test || echo "Test step skipped (jest not configured)."
+      - name: Run tests
+        run: npm test
 
-      - name: Build (if configured)
-        run: |
-          npm run build || echo "Build step skipped."
+      - name: Build
+        run: npm run build
 
