@@ -3,7 +3,7 @@
  * Provides offline functionality and caching
  */
 
-const CACHE_NAME = 'groovescribe-v2.1.0';
+const CACHE_NAME = 'groovescribe-v2.2.1';
 const urlsToCache = [
   './',
   './index.html',
@@ -22,7 +22,7 @@ const urlsToCache = [
   './images/GScribe_Logo_word_stack.svg'
 ];
 
-// Install event - cache resources
+// Install event - cache resources and activate immediately
 self.addEventListener('install', event => {
   console.log('Service Worker installing...');
   event.waitUntil(
@@ -47,46 +47,67 @@ self.addEventListener('install', event => {
       .catch(error => {
         console.error('Failed to open cache:', error);
       })
+      .finally(() => self.skipWaiting())
   );
 });
 
-// Fetch event - serve from cache when offline
+// Fetch event - network-first for HTML, stale-while-revalidate for CSS/JS
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version or fetch from network
-        if (response) {
-          return response;
-        }
-        
-        return fetch(event.request).then(response => {
-          // Check if we received a valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+  const req = event.request;
+
+  // Bypass non-GET requests
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Avoid caching cache-busted URLs aggressively
+  if (url.searchParams.has('cb')) {
+    event.respondWith(fetch(req, { cache: 'no-store' }).catch(() => caches.match(req)));
+    return;
+  }
+
+  // Network-first for navigations and HTML documents
+  if (req.mode === 'navigate' || req.destination === 'document' || (req.headers.get('accept') || '').includes('text/html')) {
+    event.respondWith(
+      fetch(new Request(req, { cache: 'reload' })).then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+        return response;
+      }).catch(() => caches.match(req).then(resp => resp || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Stale-while-revalidate for CSS/JS
+  if (req.destination === 'script' || req.destination === 'style') {
+    event.respondWith(
+      caches.match(req).then(cached => {
+        const fetchPromise = fetch(req).then(networkResp => {
+          if (networkResp && networkResp.status === 200) {
+            const copy = networkResp.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
           }
-          
-          // Clone the response
-          const responseToCache = response.clone();
-          
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          
-          return response;
-        });
+          return networkResp;
+        }).catch(() => cached);
+        return cached || fetchPromise;
       })
-      .catch(() => {
-        // Return offline page for navigation requests
-        if (event.request.destination === 'document') {
-          return caches.match('/index.html');
-        }
-      })
+    );
+    return;
+  }
+
+  // Default: try cache, then network
+  event.respondWith(
+    caches.match(req).then(resp => resp || fetch(req).then(networkResp => {
+      if (networkResp && networkResp.status === 200 && networkResp.type === 'basic') {
+        const copy = networkResp.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(req, copy));
+      }
+      return networkResp;
+    }))
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and take control immediately
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
@@ -96,9 +117,10 @@ self.addEventListener('activate', event => {
             console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
+          return undefined;
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 

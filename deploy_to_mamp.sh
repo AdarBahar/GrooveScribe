@@ -1,130 +1,168 @@
 #!/bin/bash
 
-# Script to deploy GrooveScribe to MAMP htdocs directory
-# Usage: ./deploy_to_mamp.sh [destination_folder_name]
+# Deploy GrooveScribe into MAMP htdocs using a robust rsync include list.
+# Usage:
+#   ./deploy_to_mamp.sh [--clean] [DEST_FOLDER]
+#   ./deploy_to_mamp.sh --help
+#
+# Options:
+#   --clean, -c   Remove files in destination that don't exist locally
+#   --help,  -h   Show help and examples
+#
+# Examples:
+#   1) Default deploy (no delete):
+#        ./deploy_to_mamp.sh
+#   2) With cleanup (delete removed files):
+#        ./deploy_to_mamp.sh --clean
+#   3) Custom folder (optionally with cleanup):
+#        ./deploy_to_mamp.sh MyFolder
+#        ./deploy_to_mamp.sh --clean MyFolder
 
-# Default destination folder name is 'groove'
-DEST_FOLDER=${1:-groove}
+set -euo pipefail
+
+print_help() {
+  cat <<'EOF'
+GrooveScribe local MAMP deployment
+
+Usage:
+  ./deploy_to_mamp.sh [--clean] [DEST_FOLDER]
+  ./deploy_to_mamp.sh --help
+
+Options:
+  --clean, -c   Remove files in destination that don't exist locally
+  --help,  -h   Show this help message and exit
+
+Description:
+  Syncs the current project into /Applications/MAMP/htdocs/<DEST_FOLDER>
+  Defaults to DEST_FOLDER=Scribe. Uses rsync with include rules to copy
+  only relevant files and directories.
+
+Examples:
+  # 1) Default deploy (no delete)
+  ./deploy_to_mamp.sh
+
+  # 2) With cleanup (delete stale files in destination)
+  ./deploy_to_mamp.sh --clean
+
+  # 3) Custom folder (optionally with cleanup)
+  ./deploy_to_mamp.sh MyFolder
+  ./deploy_to_mamp.sh --clean MyFolder
+EOF
+}
+
+# Early help
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  print_help
+  exit 0
+fi
+
+# Parse optional --clean flag (first argument only)
+CLEAN=0
+if [[ "${1:-}" == "--clean" || "${1:-}" == "-c" ]]; then
+  CLEAN=1
+  shift || true
+fi
+
+# Allow help after --clean
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  print_help
+  exit 0
+fi
+
+# Default destination folder name is 'Scribe' (not 'groove')
+DEST_FOLDER=${1:-Scribe}
 MAMP_PATH="/Applications/MAMP/htdocs"
 DEST_PATH="$MAMP_PATH/$DEST_FOLDER"
 
-# Initialize file counter
-TOTAL_FILES=0
-
 echo "Deploying GrooveScribe to $DEST_PATH..."
 
-# Function to count and copy files
-count_and_copy() {
-    local source_pattern="$1"
-    local dest_path="$2"
-    local description="$3"
-    
-    if [ -n "$(ls $source_pattern 2>/dev/null)" ]; then
-        local file_count=$(ls $source_pattern 2>/dev/null | wc -l | tr -d ' ')
-        cp $source_pattern "$dest_path/"
-        TOTAL_FILES=$((TOTAL_FILES + file_count))
-        echo "  ✓ Copied $file_count $description files"
-    else
-        echo "  - No $description files found"
-    fi
-}
-
-# Function to count and copy directories recursively
-count_and_copy_dir() {
-    local source_dir="$1"
-    local dest_path="$2"
-    local description="$3"
-    
-    if [ -d "$source_dir" ]; then
-        local file_count=$(find "$source_dir" -type f 2>/dev/null | wc -l | tr -d ' ')
-        cp -r "$source_dir"/* "$dest_path/" 2>/dev/null
-        TOTAL_FILES=$((TOTAL_FILES + file_count))
-        echo "  ✓ Copied $file_count $description files"
-    else
-        echo "  - No $description directory found"
-    fi
-}
+# Ensure rsync is available
+if ! command -v rsync >/dev/null 2>&1; then
+  echo "Error: rsync is not installed. Please install rsync and retry."
+  exit 1
+fi
 
 # Create destination directory if it doesn't exist
 mkdir -p "$DEST_PATH"
 
-echo "Copying files..."
+echo "Preparing include rules and running rsync..."
 
-# Main HTML files
-echo "📄 HTML files:"
-count_and_copy "*.html" "$DEST_PATH" "HTML"
+# Build rsync arguments
+RSYNC_ARGS=(
+  -av
+  --human-readable
+  --progress
+  --prune-empty-dirs
+  # Includes: recurse into dirs and pick needed files
+  --include '*/'
+  --include '*.html'
+  --include '*.manifest'
+  --include '*.php'
+  --include '*.json'
+  --include 'sw.js'
+  --include '.htaccess'
+  --include '*.js'
+  --include '*.css'
+  --include '*.png'
+  --include '*.jpg'
+  --include '*.jpeg'
+  --include '*.gif'
+  --include '*.svg'
+  --include '*.ico'
+  --include '*.wav'
+  # Include entire asset directories
+  --include 'js/***'
+  --include 'css/***'
+  --include 'images/***'
+  --include 'MIDI.js/***'
+  --include 'soundfont/***'
+  --include 'font-awesome/***'
+  --include 'jstools/***'
+  --include '.deploy_build/***'
+  # Exclude everything else
+  --exclude '*'
+)
 
-# Manifest files
-echo "📋 Manifest files:"
-count_and_copy "*.manifest" "$DEST_PATH" "manifest"
-
-# JavaScript files
-echo "⚡ JavaScript files:"
-mkdir -p "$DEST_PATH/js"
-count_and_copy_dir "js" "$DEST_PATH/js" "JavaScript"
-
-# CSS files
-echo "🎨 CSS files:"
-mkdir -p "$DEST_PATH/css"
-count_and_copy_dir "css" "$DEST_PATH/css" "CSS"
-
-# Images
-echo "🖼️  Image files:"
-mkdir -p "$DEST_PATH/images"
-count_and_copy_dir "images" "$DEST_PATH/images" "image"
-
-# MIDI.js
-echo "🎵 MIDI.js files:"
-mkdir -p "$DEST_PATH/MIDI.js/js/MIDI"
-mkdir -p "$DEST_PATH/MIDI.js/inc"
-if [ -d "MIDI.js/js" ]; then
-    midi_js_count=$(find "MIDI.js/js" -type f 2>/dev/null | wc -l | tr -d ' ')
-    cp -r MIDI.js/js/* "$DEST_PATH/MIDI.js/js/" 2>/dev/null
-    TOTAL_FILES=$((TOTAL_FILES + midi_js_count))
-    echo "  ✓ Copied $midi_js_count MIDI.js JavaScript files"
-else
-    echo "  - No MIDI.js JavaScript files found"
+if [[ "$CLEAN" == "1" ]]; then
+  RSYNC_ARGS+=(--delete)
 fi
 
-if [ -d "MIDI.js/inc" ]; then
-    midi_inc_count=$(find "MIDI.js/inc" -type f 2>/dev/null | wc -l | tr -d ' ')
-    cp -r MIDI.js/inc/* "$DEST_PATH/MIDI.js/inc/" 2>/dev/null
-    TOTAL_FILES=$((TOTAL_FILES + midi_inc_count))
-    echo "  ✓ Copied $midi_inc_count MIDI.js include files"
+rsync "${RSYNC_ARGS[@]}" ./ "$DEST_PATH/"
+
+# If local .deploy_build exists, mirror hashed assets into live dirs
+if [[ -d .deploy_build ]]; then
+  echo "Mirroring hashed assets from .deploy_build to live asset folders..."
+  RSYNC_HASH_ARGS=(-av --human-readable --progress)
+  # Do NOT delete when syncing .deploy_build assets, to avoid removing
+  # runtime-required files (e.g., font files not present in .deploy_build)
+  # css/js/font-awesome hashed copies
+  if [[ -d .deploy_build/css ]]; then
+    rsync "${RSYNC_HASH_ARGS[@]}" ./.deploy_build/css/ "$DEST_PATH/css/"
+  fi
+  if [[ -d .deploy_build/js ]]; then
+    rsync "${RSYNC_HASH_ARGS[@]}" ./.deploy_build/js/ "$DEST_PATH/js/"
+  fi
+  if [[ -d .deploy_build/font-awesome ]]; then
+    rsync "${RSYNC_HASH_ARGS[@]}" ./.deploy_build/font-awesome/ "$DEST_PATH/font-awesome/"
+  fi
+
+  # Ensure Font Awesome fonts exist (not in .deploy_build by design)
+  if [[ -d ./font-awesome/4.7.0/fonts ]]; then
+    rsync -av --human-readable --progress ./font-awesome/4.7.0/fonts/ "$DEST_PATH/font-awesome/4.7.0/fonts/"
+  fi
 else
-    echo "  - No MIDI.js include files found"
+  # No local .deploy_build; if cleaning, remove any stale one at destination
+  if [[ "$CLEAN" == "1" && -d "$DEST_PATH/.deploy_build" ]]; then
+    echo "--clean specified and no local .deploy_build; removing stale destination .deploy_build"
+    rm -rf "$DEST_PATH/.deploy_build"
+  fi
 fi
-
-# Soundfont
-echo "🔊 Soundfont files:"
-mkdir -p "$DEST_PATH/soundfont"
-count_and_copy "soundfont/*.js" "$DEST_PATH/soundfont" "soundfont"
-# Also copy the NewDrumSamples directory with MP3 files
-if [ -d "soundfont/NewDrumSamples" ]; then
-    cp -r "soundfont/NewDrumSamples" "$DEST_PATH/soundfont/"
-    mp3_count=$(find "soundfont/NewDrumSamples" -name "*.mp3" 2>/dev/null | wc -l | tr -d ' ')
-    TOTAL_FILES=$((TOTAL_FILES + mp3_count))
-    echo "  ✓ Copied $mp3_count MP3 drum samples"
-else
-    echo "  - No NewDrumSamples directory found"
-fi
-
-# Font Awesome
-echo "🔤 Font Awesome files:"
-mkdir -p "$DEST_PATH/font-awesome"
-count_and_copy_dir "font-awesome" "$DEST_PATH/font-awesome" "Font Awesome"
-
-# JSTools (optional)
-# echo "🔧 JSTools files:"
-# mkdir -p "$DEST_PATH/jstools"
-# count_and_copy_dir "jstools" "$DEST_PATH/jstools" "JSTools"
 
 echo ""
 echo "🎉 Deployment complete!"
-echo "📊 Total files copied: $TOTAL_FILES"
 echo "🌐 Your application is now available at: http://localhost:8888/$DEST_FOLDER/"
 
 # Optional: Show disk usage of deployed files
 if command -v du &> /dev/null; then
-    echo "💾 Deployed size: $(du -sh "$DEST_PATH" | cut -f1)"
+  echo "💾 Deployed size: $(du -sh "$DEST_PATH" | cut -f1)"
 fi

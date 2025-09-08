@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scribe Directory Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }
+        .test-box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .location { font-size: 24px; font-weight: bold; color: #28a745; }
+        .timestamp { color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <div class="location">🎯 SERVING FROM: SCRIBE SUBDIRECTORY</div>
+        <div class="timestamp">Created: August 20, 2025 at 12:00 PM</div>
+        <div class="timestamp">Version: 1.4.5</div>
+        <p>If you see this message, the web server is serving files from the <strong>Scribe subdirectory</strong> (/public_html/Scribe/)</p>
+        <p>This means there might be a subdomain configuration pointing to this directory.</p>
+    </div>
+    
+    <script>
+        console.log('Directory test: SCRIBE SUBDIRECTORY');
+        console.log('URL:', window.location.href);
+        console.log('Timestamp:', new Date().toISOString());
+    </script>
+</body>
+</html>

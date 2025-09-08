@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Loading Fix Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #e9e9e9;
+        }
+        .test-results {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .test-url {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>URL Loading Fix Test</h1>
+    <p>This test verifies that the fix for the URL parameter loading issue works correctly.</p>
+    
+    <div class="test-container">
+        <div class="test-title">Test URL</div>
+        <div class="test-url" id="testUrl">
+            ?TimeSig=4/4&Div=16&Tempo=80&Measures=1&H=|xxxxxxxxxxxxxxxx|&S=|----O-------O---|&K=|o-------o-------|
+        </div>
+        <p>This URL should load immediately with functional play buttons (no need for multiple refreshes).</p>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">Automated Test</div>
+        <p>Run automated tests to verify the fix:</p>
+        
+        <button onclick="runSingleLoadTest()">Test Single Load</button>
+        <button onclick="runMultipleLoadTest()">Test Multiple Loads</button>
+        <button onclick="runTimingTest()">Test Timing</button>
+        <button onclick="clearResults()">Clear Results</button>
+        
+        <div class="status info" id="testStatus">Click a test button to start</div>
+        
+        <div class="test-results" id="testResults">Test results will appear here...</div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">Manual Test</div>
+        <p>Manual verification steps:</p>
+        <ol>
+            <li>Click the "Load Test URL" button below</li>
+            <li>Verify that both play buttons appear and are functional immediately</li>
+            <li>No multiple refreshes should be needed</li>
+        </ol>
+        
+        <button onclick="loadTestURL()">Load Test URL</button>
+        <button onclick="checkButtonStatus()">Check Button Status</button>
+        
+        <div class="status info" id="manualStatus">Ready for manual testing</div>
+    </div>
+
+    <!-- Load the same scripts as the main application -->
+    <script src="./MIDI.js/js/MIDI/AudioDetect.js"></script>
+    <script src="./MIDI.js/js/MIDI/LoadPlugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/Plugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/Player.js"></script>
+    <script src="./MIDI.js/inc/DOMLoader.XMLHttp.js"></script>
+    <script src="./MIDI.js/inc/jasmid/stream.js"></script>
+    <script src="./MIDI.js/inc/jasmid/midifile.js"></script>
+    <script src="./MIDI.js/inc/jasmid/replayer.js"></script>
+    <script src="./MIDI.js/inc/Base64.js"></script>
+    <script src="./MIDI.js/inc/base64binary.js"></script>
+    <script src="js/abc2svg-1.js"></script>
+    <script src="js/jsmidgen.js"></script>
+    <script src="js/groove_writer.js"></script>
+    <script src="js/groove_utils.js"></script>
+    <script src="js/grooves.js"></script>
+
+    <script>
+        let testResults = [];
+        let currentTest = null;
+
+        function updateTestStatus(message, type = 'info') {
+            const status = document.getElementById('testStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function updateManualStatus(message, type = 'info') {
+            const status = document.getElementById('manualStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function addTestResult(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const result = `[${timestamp}] ${message}`;
+            testResults.push(result);
+            
+            const resultsElement = document.getElementById('testResults');
+            resultsElement.textContent = testResults.join('\n');
+            resultsElement.scrollTop = resultsElement.scrollHeight;
+            
+            console.log(`[TEST] ${message}`);
+        }
+
+        function clearResults() {
+            testResults = [];
+            document.getElementById('testResults').textContent = 'Test results cleared...';
+            updateTestStatus('Results cleared');
+        }
+
+        function runSingleLoadTest() {
+            updateTestStatus('Running single load test...', 'info');
+            addTestResult('=== SINGLE LOAD TEST STARTED ===');
+            
+            try {
+                // Create a new GrooveWriter instance
+                addTestResult('Creating GrooveWriter instance...');
+                const testWriter = new GrooveWriter();
+                
+                // Track initialization timing
+                const startTime = Date.now();
+                let midiInitTime = null;
+                let urlLoadTime = null;
+                
+                // Override callbacks to track timing
+                const originalMidiInitialized = testWriter.myGrooveUtils.midiEventCallbacks.midiInitialized;
+                testWriter.myGrooveUtils.midiEventCallbacks.midiInitialized = function(root) {
+                    midiInitTime = Date.now();
+                    addTestResult(`MIDI initialized after ${midiInitTime - startTime}ms`);
+                    originalMidiInitialized(root);
+                    
+                    // Check if buttons are functional
+                    setTimeout(() => {
+                        checkButtonFunctionality(testWriter);
+                    }, 100);
+                };
+                
+                // Add MIDI player to a test container
+                const testContainer = document.createElement('div');
+                testContainer.id = 'testMidiPlayer';
+                testContainer.style.display = 'none';
+                document.body.appendChild(testContainer);
+                
+                addTestResult('Adding MIDI player to page...');
+                testWriter.myGrooveUtils.AddMidiPlayerToPage('testMidiPlayer', 16);
+                
+                // Test the new initialization method
+                if (typeof testWriter.initializeMidiThenLoadURL === 'function') {
+                    addTestResult('Using new initializeMidiThenLoadURL method');
+                    testWriter.initializeMidiThenLoadURL();
+                } else {
+                    addTestResult('ERROR: New initialization method not found');
+                    updateTestStatus('Test failed: New method not found', 'error');
+                    return;
+                }
+                
+                updateTestStatus('Single load test in progress...', 'info');
+                
+            } catch (error) {
+                addTestResult(`ERROR: ${error.message}`);
+                updateTestStatus(`Single load test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function checkButtonFunctionality(testWriter) {
+            const uniqueIndex = testWriter.myGrooveUtils.grooveUtilsUniqueIndex;
+            const playButtonId = `midiPlayImage${uniqueIndex}`;
+            const playPlusButtonId = `midiPlayPlusImage${uniqueIndex}`;
+            
+            const playButton = document.getElementById(playButtonId);
+            const playPlusButton = document.getElementById(playPlusButtonId);
+            
+            addTestResult(`Checking buttons with index ${uniqueIndex}:`);
+            addTestResult(`  Play button: ${playButton ? 'Found' : 'Not found'}`);
+            addTestResult(`  Play+ button: ${playPlusButton ? 'Found' : 'Not found'}`);
+            
+            if (playButton) {
+                addTestResult(`  Play button onclick: ${playButton.onclick ? 'Set' : 'Not set'}`);
+            }
+            
+            if (playPlusButton) {
+                addTestResult(`  Play+ button onclick: ${playPlusButton.onclick ? 'Set' : 'Not set'}`);
+            }
+            
+            if (playButton && playButton.onclick && playPlusButton && playPlusButton.onclick) {
+                addTestResult('✓ BOTH BUTTONS ARE FUNCTIONAL');
+                updateTestStatus('✓ Single load test PASSED', 'success');
+            } else {
+                addTestResult('✗ BUTTONS NOT FUNCTIONAL');
+                updateTestStatus('✗ Single load test FAILED', 'error');
+            }
+            
+            addTestResult('=== SINGLE LOAD TEST COMPLETED ===');
+        }
+
+        function runMultipleLoadTest() {
+            updateTestStatus('Running multiple load test...', 'info');
+            addTestResult('=== MULTIPLE LOAD TEST STARTED ===');
+            
+            let loadCount = 0;
+            const maxLoads = 3;
+            let successCount = 0;
+            
+            function performLoad() {
+                loadCount++;
+                addTestResult(`--- Load ${loadCount}/${maxLoads} ---`);
+                
+                try {
+                    const testWriter = new GrooveWriter();
+                    
+                    testWriter.myGrooveUtils.midiEventCallbacks.midiInitialized = function(root) {
+                        addTestResult(`Load ${loadCount}: MIDI initialized`);
+                        
+                        // Check functionality
+                        setTimeout(() => {
+                            const uniqueIndex = testWriter.myGrooveUtils.grooveUtilsUniqueIndex;
+                            const playButton = document.getElementById(`midiPlayImage${uniqueIndex}`);
+                            const playPlusButton = document.getElementById(`midiPlayPlusImage${uniqueIndex}`);
+                            
+                            if (playButton && playButton.onclick && playPlusButton && playPlusButton.onclick) {
+                                addTestResult(`Load ${loadCount}: ✓ Buttons functional`);
+                                successCount++;
+                            } else {
+                                addTestResult(`Load ${loadCount}: ✗ Buttons not functional`);
+                            }
+                            
+                            if (loadCount < maxLoads) {
+                                setTimeout(performLoad, 500);
+                            } else {
+                                addTestResult(`=== MULTIPLE LOAD TEST COMPLETED ===`);
+                                addTestResult(`Success rate: ${successCount}/${maxLoads}`);
+                                
+                                if (successCount === maxLoads) {
+                                    updateTestStatus('✓ Multiple load test PASSED', 'success');
+                                } else {
+                                    updateTestStatus(`✗ Multiple load test FAILED (${successCount}/${maxLoads})`, 'error');
+                                }
+                            }
+                        }, 200);
+                    };
+                    
+                    // Create test container
+                    const testContainer = document.createElement('div');
+                    testContainer.id = `testMidiPlayer${loadCount}`;
+                    testContainer.style.display = 'none';
+                    document.body.appendChild(testContainer);
+                    
+                    testWriter.myGrooveUtils.AddMidiPlayerToPage(`testMidiPlayer${loadCount}`, 16);
+                    
+                    if (typeof testWriter.initializeMidiThenLoadURL === 'function') {
+                        testWriter.initializeMidiThenLoadURL();
+                    } else {
+                        testWriter.myGrooveUtils.oneTimeInitializeMidi();
+                    }
+                    
+                } catch (error) {
+                    addTestResult(`Load ${loadCount}: ERROR - ${error.message}`);
+                    if (loadCount < maxLoads) {
+                        setTimeout(performLoad, 500);
+                    }
+                }
+            }
+            
+            performLoad();
+        }
+
+        function runTimingTest() {
+            updateTestStatus('Running timing test...', 'info');
+            addTestResult('=== TIMING TEST STARTED ===');
+            
+            const startTime = Date.now();
+            let midiInitTime = null;
+            let urlLoadTime = null;
+            let buttonsReadyTime = null;
+            
+            try {
+                const testWriter = new GrooveWriter();
+                
+                // Override the new initialization method to track timing
+                const originalCallback = testWriter.myGrooveUtils.midiEventCallbacks.midiInitialized;
+                testWriter.myGrooveUtils.midiEventCallbacks.midiInitialized = function(root) {
+                    midiInitTime = Date.now();
+                    addTestResult(`MIDI initialized: ${midiInitTime - startTime}ms`);
+                    
+                    originalCallback(root);
+                    
+                    // Check when buttons become ready
+                    setTimeout(() => {
+                        const uniqueIndex = testWriter.myGrooveUtils.grooveUtilsUniqueIndex;
+                        const playButton = document.getElementById(`midiPlayImage${uniqueIndex}`);
+                        
+                        if (playButton && playButton.onclick) {
+                            buttonsReadyTime = Date.now();
+                            addTestResult(`Buttons ready: ${buttonsReadyTime - startTime}ms`);
+                            addTestResult(`Time from MIDI init to buttons ready: ${buttonsReadyTime - midiInitTime}ms`);
+                            
+                            addTestResult('=== TIMING TEST COMPLETED ===');
+                            updateTestStatus('✓ Timing test completed', 'success');
+                        } else {
+                            addTestResult('✗ Buttons not ready after MIDI init');
+                            updateTestStatus('✗ Timing test failed', 'error');
+                        }
+                    }, 50);
+                };
+                
+                // Create test container
+                const testContainer = document.createElement('div');
+                testContainer.id = 'timingTestMidiPlayer';
+                testContainer.style.display = 'none';
+                document.body.appendChild(testContainer);
+                
+                addTestResult('Starting initialization...');
+                testWriter.myGrooveUtils.AddMidiPlayerToPage('timingTestMidiPlayer', 16);
+                
+                if (typeof testWriter.initializeMidiThenLoadURL === 'function') {
+                    testWriter.initializeMidiThenLoadURL();
+                } else {
+                    addTestResult('ERROR: New initialization method not found');
+                    updateTestStatus('Timing test failed: New method not found', 'error');
+                }
+                
+            } catch (error) {
+                addTestResult(`ERROR: ${error.message}`);
+                updateTestStatus(`Timing test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function loadTestURL() {
+            updateManualStatus('Loading test URL...', 'info');
+            
+            try {
+                // Simulate loading the page with URL parameters
+                const testURL = '?TimeSig=4/4&Div=16&Tempo=80&Measures=1&H=|xxxxxxxxxxxxxxxx|&S=|----O-------O---|&K=|o-------o-------|';
+                
+                // Create a new GrooveWriter instance for manual testing
+                window.manualTestWriter = new GrooveWriter();
+                
+                // Add MIDI player to a visible container
+                let manualContainer = document.getElementById('manualTestContainer');
+                if (!manualContainer) {
+                    manualContainer = document.createElement('div');
+                    manualContainer.id = 'manualTestContainer';
+                    manualContainer.style.cssText = 'border: 2px solid #007bff; padding: 10px; margin: 10px 0; border-radius: 4px;';
+                    manualContainer.innerHTML = '<h4>Manual Test MIDI Player:</h4>';
+                    document.querySelector('.test-container:last-child').appendChild(manualContainer);
+                }
+                
+                window.manualTestWriter.myGrooveUtils.AddMidiPlayerToPage('manualTestContainer', 16);
+                
+                // Use the new initialization method
+                if (typeof window.manualTestWriter.initializeMidiThenLoadURL === 'function') {
+                    window.manualTestWriter.initializeMidiThenLoadURL();
+                    updateManualStatus('Test URL loaded with new method - check buttons above', 'success');
+                } else {
+                    window.manualTestWriter.myGrooveUtils.oneTimeInitializeMidi();
+                    updateManualStatus('Test URL loaded with old method - check buttons above', 'info');
+                }
+                
+            } catch (error) {
+                updateManualStatus(`Failed to load test URL: ${error.message}`, 'error');
+            }
+        }
+
+        function checkButtonStatus() {
+            if (!window.manualTestWriter) {
+                updateManualStatus('No manual test instance available', 'error');
+                return;
+            }
+            
+            const uniqueIndex = window.manualTestWriter.myGrooveUtils.grooveUtilsUniqueIndex;
+            const playButton = document.getElementById(`midiPlayImage${uniqueIndex}`);
+            const playPlusButton = document.getElementById(`midiPlayPlusImage${uniqueIndex}`);
+            
+            if (playButton && playButton.onclick && playPlusButton && playPlusButton.onclick) {
+                updateManualStatus('✓ Both play buttons are functional!', 'success');
+            } else if (playButton && playPlusButton) {
+                updateManualStatus('✗ Buttons exist but are not functional', 'error');
+            } else {
+                updateManualStatus('✗ Buttons not found', 'error');
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            addTestResult('Test page loaded and ready');
+            updateTestStatus('Ready to run tests');
+        });
+    </script>
+</body>
+</html>

@@ -117,6 +117,72 @@ function GrooveUtils() {
 
 	var root = this;
 
+	// Expose selected constants on the instance for external modules (e.g., simple-audio-system)
+	// Hi-hat ABC constants
+	root.constant_ABC_HH_Ride = constant_ABC_HH_Ride;
+	root.constant_ABC_HH_Ride_Bell = constant_ABC_HH_Ride_Bell;
+	root.constant_ABC_HH_Cow_Bell = constant_ABC_HH_Cow_Bell;
+	root.constant_ABC_HH_Crash = constant_ABC_HH_Crash;
+	root.constant_ABC_HH_Stacker = constant_ABC_HH_Stacker;
+	root.constant_ABC_HH_Metronome_Normal = constant_ABC_HH_Metronome_Normal;
+	root.constant_ABC_HH_Metronome_Accent = constant_ABC_HH_Metronome_Accent;
+	root.constant_ABC_HH_Open = constant_ABC_HH_Open;
+	root.constant_ABC_HH_Close = constant_ABC_HH_Close;
+	root.constant_ABC_HH_Accent = constant_ABC_HH_Accent;
+	root.constant_ABC_HH_Normal = constant_ABC_HH_Normal;
+
+	// Snare ABC constants
+	root.constant_ABC_SN_Ghost = constant_ABC_SN_Ghost;
+	root.constant_ABC_SN_Accent = constant_ABC_SN_Accent;
+	root.constant_ABC_SN_Normal = constant_ABC_SN_Normal;
+	root.constant_ABC_SN_XStick = constant_ABC_SN_XStick;
+	root.constant_ABC_SN_Buzz = constant_ABC_SN_Buzz;
+	root.constant_ABC_SN_Flam = constant_ABC_SN_Flam;
+	root.constant_ABC_SN_Drag = constant_ABC_SN_Drag;
+
+	// Kick and toms ABC constants
+	root.constant_ABC_KI_SandK = constant_ABC_KI_SandK;
+	root.constant_ABC_KI_Splash = constant_ABC_KI_Splash;
+	root.constant_ABC_KI_Normal = constant_ABC_KI_Normal;
+	root.constant_ABC_T1_Normal = constant_ABC_T1_Normal;
+	root.constant_ABC_T2_Normal = constant_ABC_T2_Normal;
+	root.constant_ABC_T3_Normal = constant_ABC_T3_Normal;
+	root.constant_ABC_T4_Normal = constant_ABC_T4_Normal;
+
+	// General constants
+	root.constant_NUMBER_OF_TOMS = constant_NUMBER_OF_TOMS;
+	root.constant_ABC_OFF = constant_ABC_OFF;
+
+	// MIDI note/velocity constants
+	root.constant_OUR_MIDI_VELOCITY_NORMAL = constant_OUR_MIDI_VELOCITY_NORMAL;
+	root.constant_OUR_MIDI_VELOCITY_ACCENT = constant_OUR_MIDI_VELOCITY_ACCENT;
+	root.constant_OUR_MIDI_VELOCITY_GHOST = constant_OUR_MIDI_VELOCITY_GHOST;
+	root.constant_OUR_MIDI_METRONOME_1 = constant_OUR_MIDI_METRONOME_1;
+	root.constant_OUR_MIDI_METRONOME_NORMAL = constant_OUR_MIDI_METRONOME_NORMAL;
+	root.constant_OUR_MIDI_HIHAT_NORMAL = constant_OUR_MIDI_HIHAT_NORMAL;
+	root.constant_OUR_MIDI_HIHAT_OPEN = constant_OUR_MIDI_HIHAT_OPEN;
+	root.constant_OUR_MIDI_HIHAT_ACCENT = constant_OUR_MIDI_HIHAT_ACCENT;
+	root.constant_OUR_MIDI_HIHAT_CRASH = constant_OUR_MIDI_HIHAT_CRASH;
+	root.constant_OUR_MIDI_HIHAT_STACKER = constant_OUR_MIDI_HIHAT_STACKER;
+	root.constant_OUR_MIDI_HIHAT_METRONOME_NORMAL = constant_OUR_MIDI_HIHAT_METRONOME_NORMAL;
+	root.constant_OUR_MIDI_HIHAT_METRONOME_ACCENT = constant_OUR_MIDI_HIHAT_METRONOME_ACCENT;
+	root.constant_OUR_MIDI_HIHAT_RIDE = constant_OUR_MIDI_HIHAT_RIDE;
+	root.constant_OUR_MIDI_HIHAT_RIDE_BELL = constant_OUR_MIDI_HIHAT_RIDE_BELL;
+	root.constant_OUR_MIDI_HIHAT_COW_BELL = constant_OUR_MIDI_HIHAT_COW_BELL;
+	root.constant_OUR_MIDI_HIHAT_FOOT = constant_OUR_MIDI_HIHAT_FOOT;
+	root.constant_OUR_MIDI_SNARE_NORMAL = constant_OUR_MIDI_SNARE_NORMAL;
+	root.constant_OUR_MIDI_SNARE_ACCENT = constant_OUR_MIDI_SNARE_ACCENT;
+	root.constant_OUR_MIDI_SNARE_GHOST = constant_OUR_MIDI_SNARE_GHOST;
+	root.constant_OUR_MIDI_SNARE_XSTICK = constant_OUR_MIDI_SNARE_XSTICK;
+	root.constant_OUR_MIDI_SNARE_BUZZ = constant_OUR_MIDI_SNARE_BUZZ;
+	root.constant_OUR_MIDI_SNARE_FLAM = constant_OUR_MIDI_SNARE_FLAM;
+	root.constant_OUR_MIDI_SNARE_DRAG = constant_OUR_MIDI_SNARE_DRAG;
+	root.constant_OUR_MIDI_KICK_NORMAL = constant_OUR_MIDI_KICK_NORMAL;
+	root.constant_OUR_MIDI_TOM1_NORMAL = constant_OUR_MIDI_TOM1_NORMAL;
+	root.constant_OUR_MIDI_TOM2_NORMAL = constant_OUR_MIDI_TOM2_NORMAL;
+	root.constant_OUR_MIDI_TOM3_NORMAL = constant_OUR_MIDI_TOM3_NORMAL;
+	root.constant_OUR_MIDI_TOM4_NORMAL = constant_OUR_MIDI_TOM4_NORMAL;
+
 	root.abc_obj = null;
 
 	// local constants
@@ -2304,6 +2370,20 @@ function GrooveUtils() {
 		// it will only make changes to the tempo and swing
 		// playStarting: boolean that is true on the first time through the midi playback
 		this.loadMidiDataEvent = function (root, playStarting) {
+			// Ensure myGrooveData reflects the current UI in writer mode
+			try {
+				if ((!root.myGrooveData || !root.myGrooveData.hh_array || !root.myGrooveData.hh_array.length) &&
+					window.myGrooveWriter && typeof window.myGrooveWriter.grooveDataFromClickableUI === 'function') {
+					root.myGrooveData = window.myGrooveWriter.grooveDataFromClickableUI();
+				}
+				// Also refresh from UI when starting playback to capture latest edits
+				if (playStarting && window.myGrooveWriter && typeof window.myGrooveWriter.grooveDataFromClickableUI === 'function') {
+					root.myGrooveData = window.myGrooveWriter.grooveDataFromClickableUI();
+				}
+				// Expose active groove for the transport shim
+				try { window.__GS_ACTIVE_UTILS = root; window.__GS_ACTIVE_GROOVE = root.myGrooveData; } catch (_) {}
+			} catch (_) {}
+
 			if (root.myGrooveData) {
 				root.myGrooveData.tempo = root.getTempo();
 				root.myGrooveData.swingPercent = root.getSwing();
@@ -2341,7 +2421,9 @@ function GrooveUtils() {
 			if (plusIcon)
 				plusIcon.className = "midiPlayPlusImage Stopped";
 
-			// Clear the last clicked button
+			// Clear the last clicked button and playback cache
+			this._lastPlayedIndex = -1;
+			this._playbackCache = null;
 			root.lastClickedButton = null;
 		};
 		this.repeatChangeEvent = function (root, newValue) {
@@ -2350,10 +2432,108 @@ function GrooveUtils() {
 			else
 				document.getElementById("midiRepeatImage" + root.grooveUtilsUniqueIndex).src = root.getMidiImageLocation() + "grey_repeat.png";
 		};
-		this.percentProgress = function (root, percent) {};
+		// Drive transport audio using the note arrays when MIDI engine is shimmed
+		this._playbackCache = null;
+		this._lastPlayedIndex = -1;
+		this.percentProgress = function (root, percent) {
+			try {
+				if (!root || !root.myGrooveData) return;
+				var ratio = Math.max(0, Math.min(1, (percent || 0) / 100));
+                // Detect loop wrap-around (ratio decreased vs previous frame) and reset index
+                if (typeof this._prevRatio === 'number' && ratio < this._prevRatio) {
+                    this._lastPlayedIndex = -1;
+                    // Fire first index immediately to avoid perceived gap at bar start
+                    try {
+                        if (this._playbackCache && this._playbackCache.mapping && this._playbackCache.mapping.length > 0) {
+                            this._playIndex(root, 0);
+                            this._lastPlayedIndex = 0;
+                        }
+                    } catch (_) {}
+                }
+                this._prevRatio = ratio;
+				// Debug: log progress occasionally
+				if (Math.random() < 0.05) console.log('percentProgress:', percent, 'ratio:', ratio);
+				// Lazy init playback cache
+				if (!this._playbackCache) {
+					var gd = root.myGrooveData;
+					var isTrip = root.isTripletDivisionFromNotesPerMeasure(gd.notesPerMeasure, gd.numBeats, gd.noteValue);
+					var HH = root.scaleNoteArrayToFullSize(gd.hh_array, gd.numberOfMeasures, gd.notesPerMeasure, gd.numBeats, gd.noteValue);
+					var SN = root.scaleNoteArrayToFullSize(gd.snare_array, gd.numberOfMeasures, gd.notesPerMeasure, gd.numBeats, gd.noteValue);
+					var KI = root.scaleNoteArrayToFullSize(gd.kick_array, gd.numberOfMeasures, gd.notesPerMeasure, gd.numBeats, gd.noteValue);
+					var TOMS = [];
+					for (var i = 0; i < constant_NUMBER_OF_TOMS; i++) {
+						TOMS[i] = root.scaleNoteArrayToFullSize(gd.toms_array[i], gd.numberOfMeasures, gd.notesPerMeasure, gd.numBeats, gd.noteValue);
+					}
+					var mapping = root.create_note_mapping_array_for_highlighting(HH, SN, KI, gd.showToms ? TOMS : null, HH.length);
+					this._playbackCache = { HH: HH, SN: SN, KI: KI, TOMS: gd.showToms ? TOMS : null, mapping: mapping };
+					this._lastPlayedIndex = -1;
+				}
+				var cache = this._playbackCache;
+				var curIndex = Math.floor(ratio * cache.mapping.length);
+				if (curIndex <= this._lastPlayedIndex) return;
+				// Advance through indexes and trigger notes at mapped positions
+				for (var idx = this._lastPlayedIndex + 1; idx <= curIndex; idx++) {
+					if (!cache.mapping[idx]) continue;
+					this._playIndex(root, idx);
+				}
+				this._lastPlayedIndex = curIndex;
+			} catch (e) { /* swallow to avoid breaking UI */ }
+		};
+            this._playIndex = function (root, i) {
+                // If modern Web Audio scheduler is active, skip audio triggers but keep visual progression
+                var skipAudio = !!window.__GS_AUDIO_SCHED_ACTIVE;
+                var cache = this._playbackCache; if (!cache) return;
+                var channel = 9; var velNorm = constant_OUR_MIDI_VELOCITY_NORMAL; var velAcc = constant_OUR_MIDI_VELOCITY_ACCENT || 120;
+                var note;
+                function hit(n, v){ if (skipAudio) return; try { if (window.MIDI && window.MIDI.WebAudio) { window.MIDI.WebAudio.noteOn(channel, n, v, 0); } } catch(e){} }
+			// Hi-hat mapping
+			switch (cache.HH[i]) {
+				case constant_ABC_HH_Normal:
+				case constant_ABC_HH_Close: note = constant_OUR_MIDI_HIHAT_NORMAL; hit(note, velNorm); break;
+				case constant_ABC_HH_Accent: note = constant_OUR_MIDI_HIHAT_NORMAL; hit(note, velAcc); break;
+				case constant_ABC_HH_Open: note = constant_OUR_MIDI_HIHAT_OPEN; hit(note, velNorm); break;
+				case constant_ABC_HH_Foot: note = constant_OUR_MIDI_HIHAT_FOOT; hit(note, velNorm); break;
+				case constant_ABC_HH_Metronome_Normal: note = constant_OUR_MIDI_METRONOME_NORMAL; hit(note, velNorm); break;
+				case constant_ABC_HH_Metronome_Accent: note = constant_OUR_MIDI_METRONOME_1; hit(note, velAcc); break;
+				default: break;
+			}
+			// Snare mapping
+			switch (cache.SN[i]) {
+				case constant_ABC_SN_Normal: note = constant_OUR_MIDI_SNARE_NORMAL; hit(note, velNorm); break;
+				case constant_ABC_SN_Flam: note = constant_OUR_MIDI_SNARE_FLAM; hit(note, velAcc); break;
+				case constant_ABC_SN_Accent: note = constant_OUR_MIDI_SNARE_NORMAL; hit(note, velAcc); break;
+				case constant_ABC_SN_Ghost: note = constant_OUR_MIDI_SNARE_GHOST; hit(note, Math.max(10, Math.floor(velNorm * 0.5))); break;
+				case constant_ABC_SN_XStick: note = constant_OUR_MIDI_SNARE_XSTICK; hit(note, velNorm); break;
+				case constant_ABC_SN_Drag: note = constant_OUR_MIDI_SNARE_DRAG; hit(note, velNorm); break;
+				case constant_ABC_SN_Buzz: note = constant_OUR_MIDI_SNARE_BUZZ; hit(note, velNorm); break;
+				default: break;
+			}
+			// Kick mapping
+			switch (cache.KI[i]) {
+				case constant_ABC_KI_Splash: note = constant_OUR_MIDI_HIHAT_FOOT; hit(note, velNorm); break;
+				case constant_ABC_KI_SandK: hit(constant_OUR_MIDI_HIHAT_FOOT, velNorm); hit(constant_OUR_MIDI_KICK_NORMAL, velNorm); break;
+				case constant_ABC_KI_Normal: note = constant_OUR_MIDI_KICK_NORMAL; hit(note, velNorm); break;
+				default: break;
+			}
+			// Toms mapping (basic)
+			if (cache.TOMS) {
+				for (var t = 0; t < constant_NUMBER_OF_TOMS; t++) {
+					var tv = cache.TOMS[t][i];
+					switch (tv) {
+						case constant_ABC_T1_Normal: hit(constant_OUR_MIDI_TOM1_NORMAL, velNorm); break;
+						case constant_ABC_T2_Normal: hit(constant_OUR_MIDI_TOM2_NORMAL, velNorm); break;
+						case constant_ABC_T3_Normal: hit(constant_OUR_MIDI_TOM3_NORMAL, velNorm); break;
+						case constant_ABC_T4_Normal: hit(constant_OUR_MIDI_TOM4_NORMAL, velNorm); break;
+						default: break;
+					}
+				}
+			}
+		};
 		this.notePlaying = function (root, note_type, note_position) {};
 
 		this.midiInitialized = function (root) {
+			console.log('MIDI initialized - setting up play buttons');
+
 			var icon = document.getElementById("midiPlayImage" + root.grooveUtilsUniqueIndex);
 			if (icon)
 				icon.className = "midiPlayImage Stopped";
@@ -2362,10 +2542,29 @@ function GrooveUtils() {
 			if (plusIcon)
 				plusIcon.className = "midiPlayPlusImage Stopped";
 
-			document.getElementById("midiPlayImage" + root.grooveUtilsUniqueIndex).onclick = function (event) {
-				root.lastClickedButton = 'normal';
-				root.startOrStopMIDI_playback();
-			}; // enable regular play button
+			// Set up regular play button
+			var playButton = document.getElementById("midiPlayImage" + root.grooveUtilsUniqueIndex);
+			if (playButton) {
+				playButton.onclick = function (event) {
+					root.lastClickedButton = 'normal';
+					root.startOrStopMIDI_playback();
+				};
+				console.log('✅ Regular play button onclick handler set');
+			} else {
+				console.log('❌ Regular play button not found');
+			}
+
+			// Set up plus play button (ensure it's functional)
+			var plusPlayButton = document.getElementById("midiPlayPlusImage" + root.grooveUtilsUniqueIndex);
+			if (plusPlayButton) {
+				plusPlayButton.onclick = function (event) {
+					root.lastClickedButton = 'plus';
+					root.startAutoSpeedUpPlayback();
+				};
+				console.log('✅ Plus play button onclick handler set');
+			} else {
+				console.log('❌ Plus play button not found');
+			}
 
 			setupHotKeys(); // spacebar to play
 		};
@@ -2824,12 +3023,27 @@ function GrooveUtils() {
 		return midi_url;
 	};
 
-	root.loadMIDIFromURL = function (midiURL) {
+root.loadMIDIFromURL = function (midiURL) {
 
 		MIDI.Player.timeWarp = 1; // speed the song is played back
 		MIDI.Player.BPM = root.getTempo();
-		MIDI.Player.loadFile(midiURL, midiLoaderCallback());
-	};
+    // Avoid redundant loads when using the simple audio shim; rely on scheduler
+    try {
+        if (MIDI && MIDI.Player && MIDI.Player.isSimpleAudioShim) {
+            if (!window.__GS_INITIAL_LOAD_DONE__) {
+                // Expose current utils/data for the transport shim to consume if writer isn't globally ready yet
+                try { window.__GS_ACTIVE_UTILS = root; window.__GS_ACTIVE_GROOVE = root.myGrooveData; } catch(_){}
+                try { console.log('[GrooveUtils] __GS_ACTIVE_* set in loadMIDIFromURL'); } catch(_) {}
+                window.__GS_INITIAL_LOAD_DONE__ = true;
+                MIDI.Player.loadFile(midiURL, midiLoaderCallback());
+            }
+            return;
+        }
+    } catch(_){}
+    // Non-shim path
+    try { window.__GS_ACTIVE_UTILS = root; window.__GS_ACTIVE_GROOVE = root.myGrooveData; } catch(_){}
+    MIDI.Player.loadFile(midiURL, midiLoaderCallback());
+};
 
 	root.MIDISaveAs = function (midiURL) {
 
@@ -2849,6 +3063,17 @@ function GrooveUtils() {
 
 	// play button or keypress
 	root.startMIDI_playback = function () {
+		// Ensure active utils/groove are globally visible for the transport shim
+		try {
+			if (window.myGrooveWriter && typeof window.myGrooveWriter.grooveDataFromClickableUI === 'function') {
+				// Always refresh groove data from current UI just before play
+				root.myGrooveData = window.myGrooveWriter.grooveDataFromClickableUI();
+			}
+			window.__GS_ACTIVE_UTILS = root;
+			window.__GS_ACTIVE_GROOVE = root.myGrooveData;
+			try { console.log('[Play] __GS_ACTIVE_* set at play time'); } catch(_) {}
+		} catch(_) {}
+
 		if (MIDI.Player.playing) {
 			return;
 		} else if (root.isMIDIPaused && false === root.midiEventCallbacks.doesMidiDataNeedRefresh(root.midiEventCallbacks.classRoot)) {
@@ -2869,16 +3094,17 @@ function GrooveUtils() {
 	};
 
 	// stop button or keypress
-	root.stopMIDI_playback = function () {
-		if (MIDI.Player.playing || root.isMIDIPaused) {
-			root.isMIDIPaused = false;
-			MIDI.Player.stop();
-			root.midiEventCallbacks.stopEvent(root.midiEventCallbacks.classRoot);
-			root.midiEventCallbacks.notePlaying(root.midiEventCallbacks.classRoot, "clear", -1);
-			root.clearHighlightNoteInABCSVG();
-			root.resetMetronomeOptionsOffsetClickStartRotation()
-		}
-	};
+root.stopMIDI_playback = function () {
+    if (MIDI.Player.playing || root.isMIDIPaused) {
+        root.isMIDIPaused = false;
+        MIDI.Player.stop();
+        root.midiEventCallbacks.stopEvent(root.midiEventCallbacks.classRoot);
+        root.midiEventCallbacks.notePlaying(root.midiEventCallbacks.classRoot, "clear", -1);
+        root.clearHighlightNoteInABCSVG();
+        root.resetMetronomeOptionsOffsetClickStartRotation()
+        try { if (typeof myGrooveWriter !== 'undefined' && myGrooveWriter.disableAutoSpeedUp) myGrooveWriter.disableAutoSpeedUp(); } catch(_){}
+    }
+};
 
 	// modal play/stop button
 	root.startOrStopMIDI_playback = function () {
@@ -3026,14 +3252,19 @@ function GrooveUtils() {
 	// This is different from the callbacks that we use for the midi code in this library to
 	// do events.   (Double chaining)
 	function ourMIDICallback(data) {
-		// Apply visual synchronization offset to align visual highlighting with audio
-		var adjustedNow = data.now + constant_VISUAL_SYNC_OFFSET_MS;
-		var percentComplete = (adjustedNow / data.end);
+        // Compute audio-driving percent from raw timing, and a separate visual percent with offset
+        // data.now and data.end from MIDI.js are in milliseconds
+        var audioPercentComplete = (data.now / data.end);
+        // Visual lead is helpful for highlighting, but should not affect audio scheduling
+        var adjustedNow = data.now + constant_VISUAL_SYNC_OFFSET_MS;
+        var visualPercentComplete = (adjustedNow / data.end);
 
-		// Clamp percentComplete to valid range [0, 1]
-		percentComplete = Math.max(0, Math.min(1, percentComplete));
+        // Clamp percents to valid range [0, 1]
+        audioPercentComplete = Math.max(0, Math.min(1, audioPercentComplete));
+        visualPercentComplete = Math.max(0, Math.min(1, visualPercentComplete));
 
-		root.midiEventCallbacks.percentProgress(root.midiEventCallbacks.classRoot, percentComplete * 100);
+        // Drive audio/transport with the raw timing percent for tightness
+        root.midiEventCallbacks.percentProgress(root.midiEventCallbacks.classRoot, audioPercentComplete * 100);
 
 		if (root.lastMidiTimeUpdate && root.lastMidiTimeUpdate < (data.now + 800)) {
 			root.updateMidiPlayTime();
@@ -3046,7 +3277,7 @@ function GrooveUtils() {
 			//class_midi_note_num = 0;
 			root.lastMidiTimeUpdate = -1;
 		}
-		if (data.now == data.end) {
+        if (data.now == data.end) {
 
 			// at the end of a song
 			root.midiEventCallbacks.notePlaying(root.midiEventCallbacks.classRoot, "complete", 1);
@@ -3055,16 +3286,16 @@ function GrooveUtils() {
 
 				global_total_midi_repeats++;
 
-				// regenerate the MIDI if the data needs refreshing or the OffsetClick is rotating every time
-				// advanceMetronomeOptionsOffsetClickStartRotation will return false if not rotating
-				if (root.advanceMetronomeOptionsOffsetClickStartRotation() || root.midiEventCallbacks.doesMidiDataNeedRefresh(root.midiEventCallbacks.classRoot)) {
-					MIDI.Player.stop();
-					root.midiEventCallbacks.loadMidiDataEvent(root.midiEventCallbacks.classRoot, false);
-					MIDI.Player.start();
-					//  } else {
-					// let midi.loop handle the repeat for us
-					//MIDI.Player.stop();
-					//MIDI.Player.start();
+				// When using the simple-audio shim with built-in looping, avoid stop/restart.
+				// Let the player loop seamlessly to keep BPM consistent.
+				if (!(window.MIDI && window.MIDI.Player && window.MIDI.Player.isSimpleAudioShim)) {
+					// regenerate the MIDI if the data needs refreshing or the OffsetClick is rotating every time
+					// advanceMetronomeOptionsOffsetClickStartRotation will return false if not rotating
+					if (root.advanceMetronomeOptionsOffsetClickStartRotation() || root.midiEventCallbacks.doesMidiDataNeedRefresh(root.midiEventCallbacks.classRoot)) {
+						MIDI.Player.stop();
+						root.midiEventCallbacks.loadMidiDataEvent(root.midiEventCallbacks.classRoot, false);
+						MIDI.Player.start();
+					}
 				}
 				if (root.repeatCallback) {
 					root.repeatCallback();
@@ -3100,8 +3331,8 @@ function GrooveUtils() {
 			}
 			if (note_type) {
 				global_total_midi_notes++;
-				root.midiEventCallbacks.notePlaying(root.midiEventCallbacks.classRoot, note_type, percentComplete);
-				root.highlightNoteInABCSVGFromPercentComplete(percentComplete);
+            root.midiEventCallbacks.notePlaying(root.midiEventCallbacks.classRoot, note_type, visualPercentComplete);
+            root.highlightNoteInABCSVGFromPercentComplete(visualPercentComplete);
 				if (root.noteCallback) {
 					root.noteCallback(note_type);
 				}
@@ -3135,9 +3366,15 @@ function GrooveUtils() {
 		 */
 	}
 
-	function midiLoaderCallback() {
-		MIDI.Player.addListener(ourMIDICallback);
-	}
+function midiLoaderCallback() {
+    try {
+        if (!window.__GS_MIDI_LISTENER_ADDED__) {
+            MIDI.Player.addListener(ourMIDICallback);
+            window.__GS_MIDI_LISTENER_ADDED__ = true;
+            console.log('MIDI listener attached');
+        }
+    } catch (e) { console.warn('Failed to attach MIDI listener', e); }
+}
 
 	root.getTempo = function () {
 		var tempoInput = document.getElementById("tempoInput" + root.grooveUtilsUniqueIndex);
@@ -3495,9 +3732,30 @@ function GrooveUtils() {
 	// pass in a tag ID.  (not a class)
 	// HTML will be put within the tag replacing whatever else was there
 	root.AddMidiPlayerToPage = function (HTML_Id_to_attach_to, division, expandable) {
+		console.log('AddMidiPlayerToPage called - adding HTML for MIDI player');
 		var html_element = document.getElementById(HTML_Id_to_attach_to);
-		if (html_element)
+		if (html_element) {
 			html_element.innerHTML = root.HTMLForMidiPlayer(expandable);
+			// Fallback: ensure the Play+ button exists and is wired
+			(function ensurePlus(){
+				var pid = 'midiPlayPlusImage' + root.grooveUtilsUniqueIndex;
+				if (!document.getElementById(pid)) {
+					var row = document.getElementById('playerControlsRow' + root.grooveUtilsUniqueIndex);
+					if (row) {
+						var span = document.createElement('span');
+						span.className = 'midiPlayPlusImage';
+						span.id = pid;
+						span.title = 'Play with Auto Speed Up';
+						row.insertBefore(span, row.children[1] || null);
+						span.onclick = function(){ root.lastClickedButton = 'plus'; root.startAutoSpeedUpPlayback(); };
+						console.log('✅ Injected missing Play+ button');
+					}
+				}
+			})();
+			console.log('✅ MIDI player HTML added to page');
+		} else {
+			console.log('❌ Element not found:', HTML_Id_to_attach_to);
+		}
 
 		var browserInfo = root.getBrowserInfo();
 		var isIE10 = false;
@@ -3546,10 +3804,8 @@ function GrooveUtils() {
 			html_element.addEventListener("click", root.metronomeMiniMenuClick, false);
 		}
 
-		html_element = document.getElementById("midiPlayPlusImage" + root.grooveUtilsUniqueIndex);
-		if (html_element) {
-			html_element.addEventListener("click", root.startAutoSpeedUpPlayback, false);
-		}
+		// Note: midiPlayPlusImage event listener is now set up in midiInitialized callback
+		// to ensure both play buttons are initialized at the same time
 
 		// enable or disable swing
 		root.swingEnabled(root.doesDivisionSupportSwing(division));

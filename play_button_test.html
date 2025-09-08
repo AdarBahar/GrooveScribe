@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .log {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #e9e9e9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Play Button Generation Test</h1>
+    
+    <div class="test-container">
+        <h3>Play Button Detection</h3>
+        <p>This test checks if the play buttons are being generated correctly in the DOM.</p>
+        
+        <button onclick="runPlayButtonTest()">Test Play Button Generation</button>
+        <button onclick="clearLog()">Clear Log</button>
+        
+        <div class="status info" id="testStatus">Click "Test Play Button Generation" to start</div>
+        <div class="log" id="testLog">Test results will appear here...</div>
+    </div>
+
+    <div class="test-container">
+        <h3>MIDI Player Container</h3>
+        <div id="midiPlayer">
+            <!-- MIDI player will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Load the same scripts as main page -->
+    <script src="./MIDI.js/js/MIDI/AudioDetect.js?v=1.5.3"></script>
+    <script src="./MIDI.js/js/MIDI/Plugin.js?v=1.5.3"></script>
+    <script src="./MIDI.js/js/MIDI/WebAudio.js?v=1.5.3"></script>
+    <script src="./MIDI.js/js/MIDI/LoadPlugin.js?v=1.5.3"></script>
+    <script src="./MIDI.js/js/MIDI/Player.js?v=1.5.3"></script>
+    <script src="./MIDI.js/inc/DOMLoader.XMLHttp.js?v=1.5.3"></script>
+    <script src="./MIDI.js/inc/jasmid/stream.js?v=1.5.3"></script>
+    <script src="./MIDI.js/inc/jasmid/midifile.js?v=1.5.3"></script>
+    <script src="./MIDI.js/inc/jasmid/replayer.js?v=1.5.3"></script>
+    <script src="./MIDI.js/inc/Base64.js?v=1.5.3"></script>
+    <script src="js/groove_writer.js?v=1.5.3"></script>
+    <script src="js/groove_utils.js?v=1.5.3"></script>
+
+    <script>
+        let testLog = [];
+
+        function updateTestStatus(message, type = 'info') {
+            const status = document.getElementById('testStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function addTestLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            testLog.push(`[${timestamp}] ${message}`);
+            document.getElementById('testLog').textContent = testLog.join('\n');
+            console.log(`[TEST] ${message}`);
+        }
+
+        function clearLog() {
+            testLog = [];
+            document.getElementById('testLog').textContent = 'Test log cleared...';
+            updateTestStatus('Ready to test');
+        }
+
+        function runPlayButtonTest() {
+            addTestLog('=== PLAY BUTTON GENERATION TEST ===');
+            updateTestStatus('Testing play button generation...', 'info');
+            
+            try {
+                // Check if GrooveUtils is available
+                if (typeof GrooveUtils !== 'undefined') {
+                    addTestLog('✅ GrooveUtils is available');
+                    
+                    // Create a GrooveUtils instance
+                    const grooveUtils = new GrooveUtils();
+                    addTestLog('✅ GrooveUtils instance created');
+                    
+                    // Test HTMLForMidiPlayer function
+                    if (typeof grooveUtils.HTMLForMidiPlayer === 'function') {
+                        addTestLog('✅ HTMLForMidiPlayer function is available');
+                        
+                        const playerHTML = grooveUtils.HTMLForMidiPlayer(true);
+                        addTestLog('✅ HTMLForMidiPlayer executed successfully');
+                        
+                        // Check if HTML contains play buttons
+                        const hasRegularPlay = playerHTML.includes('midiPlayImage');
+                        const hasPlusPlay = playerHTML.includes('midiPlayPlusImage');
+                        
+                        addTestLog(`Regular play button in HTML: ${hasRegularPlay ? '✅ Found' : '❌ Not found'}`);
+                        addTestLog(`Plus play button in HTML: ${hasPlusPlay ? '✅ Found' : '❌ Not found'}`);
+                        
+                        if (hasRegularPlay && hasPlusPlay) {
+                            addTestLog('✅ Both play buttons found in generated HTML');
+                            
+                            // Try to add to page
+                            grooveUtils.AddMidiPlayerToPage("midiPlayer", 16, true);
+                            addTestLog('✅ AddMidiPlayerToPage called');
+                            
+                            // Check if buttons are in DOM
+                            setTimeout(() => {
+                                const regularButton = document.querySelector('[id*="midiPlayImage"]');
+                                const plusButton = document.querySelector('[id*="midiPlayPlusImage"]');
+                                
+                                addTestLog(`Regular play button in DOM: ${regularButton ? '✅ Found' : '❌ Not found'}`);
+                                addTestLog(`Plus play button in DOM: ${plusButton ? '✅ Found' : '❌ Not found'}`);
+                                
+                                if (regularButton && plusButton) {
+                                    addTestLog('✅ SUCCESS: Both play buttons are in the DOM');
+                                    updateTestStatus('✅ Play buttons generated successfully', 'success');
+                                } else {
+                                    addTestLog('❌ FAILURE: Play buttons not found in DOM');
+                                    updateTestStatus('❌ Play buttons not found in DOM', 'error');
+                                }
+                            }, 100);
+                            
+                        } else {
+                            addTestLog('❌ FAILURE: Play buttons not found in generated HTML');
+                            updateTestStatus('❌ Play buttons not in generated HTML', 'error');
+                        }
+                        
+                    } else {
+                        addTestLog('❌ HTMLForMidiPlayer function not available');
+                        updateTestStatus('❌ HTMLForMidiPlayer function missing', 'error');
+                    }
+                    
+                } else {
+                    addTestLog('❌ GrooveUtils is not available');
+                    updateTestStatus('❌ GrooveUtils not loaded', 'error');
+                }
+                
+            } catch (error) {
+                addTestLog(`❌ Error during test: ${error.message}`);
+                updateTestStatus(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run test when page loads
+        window.addEventListener('load', () => {
+            addTestLog('Play button test page loaded');
+            updateTestStatus('Ready to test play button generation');
+        });
+    </script>
+</body>
+</html>
