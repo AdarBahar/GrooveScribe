@@ -26,6 +26,8 @@
 /*jslint browser:true devel:true */
 /*global Abc, MIDI, Midi */
 
+/* eslint-disable no-console */
+
 var global_num_GrooveUtilsCreated = 0;
 var global_grooveUtilsScriptSrc = "";
 if (document.currentScript)

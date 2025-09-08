@@ -1,4 +1,5 @@
-/**
+/* eslint-disable prettier/prettier, object-shorthand, no-empty, no-console */
+/*
  * Modern Audio System for GrooveScribe
  * Standalone version that works without ES6 modules
  * Replaces broken MIDI.js + soundfont system with Web Audio API + MP3 files
@@ -63,21 +64,21 @@
             this.lastSpeedUpTime = null;
             this.audioBuffers = {};
             this._scheduledSources = new Set();
-            
+
             // MIDI note to drum sample mapping (GrooveScribe specific)
             this.midiToSample = {
                 // Kick
                 35: 'kick',           // constant_OUR_MIDI_KICK_NORMAL
-                
+
                 // Snare variations
-                38: 'snare_normal',   // constant_OUR_MIDI_SNARE_NORMAL  
+                38: 'snare_normal',   // constant_OUR_MIDI_SNARE_NORMAL
                 21: 'snare_ghost',    // constant_OUR_MIDI_SNARE_GHOST
                 22: 'snare_accent',   // constant_OUR_MIDI_SNARE_ACCENT
                 37: 'snare_xstick',   // constant_OUR_MIDI_SNARE_XSTICK
                 25: 'snare_flam',     // constant_OUR_MIDI_SNARE_FLAM
                 23: 'snare_drag',     // constant_OUR_MIDI_SNARE_DRAG
                 24: 'snare_buzz',     // constant_OUR_MIDI_SNARE_BUZZ
-                
+
                 // Hi-hat variations
                 42: 'hihat_normal',   // constant_OUR_MIDI_HIHAT_NORMAL
                 46: 'hihat_open',     // constant_OUR_MIDI_HIHAT_OPEN
@@ -91,23 +92,23 @@
                 49: 'crash',          // constant_OUR_MIDI_HIHAT_CRASH
                 52: 'stacker',        // new mapping
                 55: 'stacker',        // legacy alias (was constant_OUR_MIDI_HIHAT_STACKER)
-                
+
                 // Toms
                 48: 'tom1',           // constant_OUR_MIDI_TOM1_NORMAL (High Tom)
                 47: 'tom2',           // constant_OUR_MIDI_TOM2_NORMAL (Mid Tom)
-                45: 'tom3',           // constant_OUR_MIDI_TOM3_NORMAL (Low Tom) 
+                45: 'tom3',           // constant_OUR_MIDI_TOM3_NORMAL (Low Tom)
                 43: 'tom4',           // constant_OUR_MIDI_TOM4_NORMAL (Floor Tom)
-                
+
                 // Metronome
                 76: 'metronome_normal',  // constant_OUR_MIDI_HIHAT_METRONOME_NORMAL
                 77: 'metronome_accent'   // constant_OUR_MIDI_HIHAT_METRONOME_ACCENT
             };
-            
+
             // Sample file name mapping
             this.sampleFiles = {
                 'kick': 'Kick.mp3',
                 'snare_normal': 'Snare Normal.mp3',
-                'snare_ghost': 'Snare Ghost.mp3', 
+                'snare_ghost': 'Snare Ghost.mp3',
                 'snare_accent': 'Snare Accent.mp3',
                 'snare_xstick': 'Snare Cross Stick.mp3',
                 'snare_flam': 'Snare Flam.mp3',
@@ -115,7 +116,7 @@
                 'snare_buzz': 'Buzz.mp3',
                 'hihat_normal': 'Hi Hat Normal.mp3',
                 'hihat_open': 'Hi Hat Open.mp3',
-                'hihat_foot': 'Hi Hat Foot.mp3', 
+                'hihat_foot': 'Hi Hat Foot.mp3',
                 'hihat_accent': 'Hi Hat Accent.mp3',
                 'ride': 'Ride.mp3',
                 'ride_bell': 'Bell.mp3',
@@ -123,7 +124,7 @@
                 'crash': 'Crash.mp3',
                 'stacker': 'Stacker.mp3',
                 'tom1': '10 Tom.mp3',        // High Tom
-                'tom2': '16 Tom.mp3',        // Mid Tom  
+                'tom2': '16 Tom.mp3',        // Mid Tom
                 'tom3': 'Rack Tom.mp3',      // Low Tom
                 'tom4': 'Floor Tom.mp3',     // Floor Tom
                 'metronome_normal': 'metronomeClick.mp3',
@@ -599,7 +600,7 @@
 
         replaceBrokenAudioFunctions() {
             const self = this;
-            
+
             // Replace the global play_single_note_for_note_setting function
             window.play_single_note_for_note_setting = (note_val) => {
                 if (self.audioManager) {
@@ -624,7 +625,7 @@
             if (this.audioManager) {
                 // Expose audio manager globally for debugging
                 window.modernAudioManager = this.audioManager;
-                
+
                 // Add audio test function
                 window.testDrumSound = (midiNote) => {
                     if (this.audioManager) {
@@ -696,7 +697,7 @@
     // Initialize the modern audio system when DOM is ready
     function initializeModernAudio() {
         const grooveScribeAudio = new GrooveScribeAudio();
-        
+
         // Wait for page to be fully loaded
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
@@ -713,4 +714,4 @@
     // Start initialization
     initializeModernAudio();
 
-})(); 
+})();

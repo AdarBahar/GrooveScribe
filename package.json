@@ -7,7 +7,7 @@
     "start": "http-server -p 8080 -c-1",
     "dev": "http-server -p 8080 -c-1 --cors",
     "build": "npm run build:css && npm run build:js",
-    "build:css": "postcss css/groove_writer_orange.css css/groove_display_orange.css -o dist/styles.min.css --use autoprefixer --use cssnano",
+    "build:css": "cat css/groove_writer_orange.css css/groove_display_orange.css | postcss -o dist/styles.min.css --use autoprefixer --use cssnano",
     "build:js": "webpack --mode production",
     "lint": "eslint \"js/**/*.js\"",
     "lint:fix": "eslint \"js/**/*.js\" --fix",
@@ -55,10 +55,8 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "abc2svg": "^1.22.14",
     "jsmidgen": "^0.1.5",
-    "midi-player-js": "^2.0.7",
-    "pablo": "^0.4.1"
+    "midi-player-js": "^2.0.7"
   },
   "browserslist": [
     "> 1%",
