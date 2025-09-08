@@ -16,7 +16,7 @@ export class GrooveUtils {
     this.grooveUtilsUniqueIndex = Date.now();
     this.midiEventCallbacks = null;
     this.lastClickedButton = null;
-    
+
     // Initialize from URL parameters
     this.initializeFromURL();
   }
@@ -99,15 +99,15 @@ export class GrooveUtils {
       if (!window.AudioContext && !window.webkitAudioContext) {
         throw new Error('Web Audio API not supported');
       }
-      
+
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       const audioContext = new AudioContext();
-      
+
       // Resume context if suspended (required by modern browsers)
       if (audioContext.state === 'suspended') {
         await audioContext.resume();
       }
-      
+
       return audioContext;
     } catch (error) {
       console.error('Failed to initialize audio context:', error);
@@ -118,7 +118,7 @@ export class GrooveUtils {
   // Improved error handling
   handleError(error, context = 'Unknown') {
     console.error(`Error in ${context}:`, error);
-    
+
     // Show user-friendly error message
     this.showNotification(`An error occurred: ${error.message}`, 'error');
   }
@@ -127,7 +127,7 @@ export class GrooveUtils {
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
     notification.textContent = message;
-    
+
     // Style the notification
     Object.assign(notification.style, {
       position: 'fixed',
@@ -142,9 +142,9 @@ export class GrooveUtils {
       maxWidth: '300px',
       backgroundColor: type === 'error' ? '#ff4444' : type === 'success' ? '#44ff44' : '#4444ff'
     });
-    
+
     document.body.appendChild(notification);
-    
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
       if (notification.parentNode) {
@@ -177,7 +177,7 @@ export class GrooveUtils {
   // Utility for creating DOM elements
   createElement(tag, attributes = {}, children = []) {
     const element = document.createElement(tag);
-    
+
     Object.entries(attributes).forEach(([key, value]) => {
       if (key === 'className') {
         element.className = value;
@@ -189,7 +189,7 @@ export class GrooveUtils {
         element[key] = value;
       }
     });
-    
+
     children.forEach(child => {
       if (typeof child === 'string') {
         element.appendChild(document.createTextNode(child));
@@ -197,7 +197,7 @@ export class GrooveUtils {
         element.appendChild(child);
       }
     });
-    
+
     return element;
   }
 
