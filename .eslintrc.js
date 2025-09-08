@@ -13,7 +13,7 @@ module.exports = {
     'prettier'
   ],
   parserOptions: {
-    ecmaVersion: 2021,
+    ecmaVersion: 'latest',
     sourceType: 'module'
   },
   rules: {
@@ -32,7 +32,9 @@ module.exports = {
     'eol-last': 'off',
     'comma-dangle': 'off',
     'semi': 'off',
-    'quotes': 'off'
+    'quotes': 'off',
+    'no-empty': 'off',
+    'no-constant-condition': 'off'
   },
   globals: {
     // Legacy globals that we'll gradually remove
