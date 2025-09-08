@@ -21,24 +21,24 @@ class GrooveScribeApp {
 
   async init() {
     try {
-      console.log('Modern GrooveScribe enhancements loading...');
+      if (window.__GS_DEBUG__) console.log('Modern GrooveScribe enhancements loading...');
 
       // Initialize modern audio system first
       await this.initializeModernAudio();
 
       // Check if legacy code is available
       if (window.myGrooveWriter) {
-        console.log('Legacy GrooveWriter found, adding modern enhancements');
+        if (window.__GS_DEBUG__) console.log('Legacy GrooveWriter found, adding modern enhancements');
         this.enhanceLegacyCode();
       } else {
-        console.log('Legacy GrooveWriter not found, waiting...');
+        if (window.__GS_DEBUG__) console.log('Legacy GrooveWriter not found, waiting...');
         // Wait for legacy initialization
         setTimeout(() => this.init(), 100);
         return;
       }
 
       this.initialized = true;
-      console.log('Modern GrooveScribe enhancements loaded successfully');
+      if (window.__GS_DEBUG__) console.log('Modern GrooveScribe enhancements loaded successfully');
 
     } catch (error) {
       console.error('Failed to load modern enhancements:', error);
@@ -48,7 +48,7 @@ class GrooveScribeApp {
 
   async initializeModernAudio() {
     try {
-      console.log('Initializing modern audio system...');
+      if (window.__GS_DEBUG__) console.log('Initializing modern audio system...');
       this.audioManager = new AudioManager();
       await this.audioManager.initialize();
 
@@ -58,7 +58,7 @@ class GrooveScribeApp {
       // Replace the broken play_single_note_for_note_setting function
       this.replaceBrokenAudioFunctions();
 
-      console.log('Modern audio system initialized successfully');
+      if (window.__GS_DEBUG__) console.log('Modern audio system initialized successfully');
 
     } catch (error) {
       console.error('Failed to initialize modern audio system:', error);
@@ -103,7 +103,7 @@ class GrooveScribeApp {
       }
     };
 
-    console.log('MIDI.js bridge created successfully');
+    if (window.__GS_DEBUG__) console.log('MIDI.js bridge created successfully');
   }
 
   replaceBrokenAudioFunctions() {
@@ -112,7 +112,7 @@ class GrooveScribeApp {
       if (this.audioManager) {
         return this.audioManager.playMidiNote(9, note_val, 127, 0);
       } else {
-        console.warn('AudioManager not available, falling back to legacy MIDI.js');
+        if (window.__GS_DEBUG__) console.warn('AudioManager not available, falling back to legacy MIDI.js');
         // Fallback to original implementation
         if (window.MIDI && window.MIDI.WebAudio) {
           return window.MIDI.WebAudio.noteOn(9, note_val, 127, 0);
@@ -123,7 +123,7 @@ class GrooveScribeApp {
       }
     };
 
-    console.log('Audio functions replaced with modern implementation');
+    if (window.__GS_DEBUG__) console.log('Audio functions replaced with modern implementation');
   }
 
   enhanceLegacyCode() {
@@ -144,7 +144,7 @@ class GrooveScribeApp {
       window.testDrumSound = (midiNote) => {
         if (this.audioManager) {
           const result = this.audioManager.playMidiNote(9, midiNote, 127, 0);
-          console.log(`Testing MIDI note ${midiNote}: ${result ? 'SUCCESS' : 'FAILED'}`);
+          if (window.__GS_DEBUG__) console.log(`Testing MIDI note ${midiNote}: ${result ? 'SUCCESS' : 'FAILED'}`);
           return result;
         }
         return false;
@@ -263,10 +263,10 @@ class GrooveScribeApp {
         if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
           if (deltaX > 0) {
             // Swipe right - could trigger some action
-            console.log('Swipe right detected');
+            if (window.__GS_DEBUG__) console.log('Swipe right detected');
           } else {
             // Swipe left - could trigger some action
-            console.log('Swipe left detected');
+            if (window.__GS_DEBUG__) console.log('Swipe left detected');
           }
         }
       });

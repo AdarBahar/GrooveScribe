@@ -202,14 +202,14 @@ export class GrooveWriter {
     this.metronomeAutoSpeedUpActive = true;
     this.addOrRemoveKeywordFromClassById('metronomeOptionsContextMenuSpeedUp', 'menuChecked', true);
     this.metronomeOptionsMenuSetSelectedState();
-    console.log('Auto Speed Up enabled via Play+ button');
+    if (window.__GS_DEBUG__) console.log('Auto Speed Up enabled via Play+ button');
   }
 
   disableAutoSpeedUp() {
     this.metronomeAutoSpeedUpActive = false;
     this.addOrRemoveKeywordFromClassById('metronomeOptionsContextMenuSpeedUp', 'menuChecked', false);
     this.metronomeOptionsMenuSetSelectedState();
-    console.log('Auto Speed Up disabled via regular Play button');
+    if (window.__GS_DEBUG__) console.log('Auto Speed Up disabled via regular Play button');
   }
 
   metronomeAutoSpeedUpTempoUpdate() {
@@ -255,7 +255,7 @@ export class GrooveWriter {
           this.myGrooveUtils.setTempo(newTempo);
           this.lastMidiTempoIncreaseTime = currentTime;
           
-          console.log(`Auto Speed Up: ${currentTempo} -> ${newTempo} BPM`);
+          if (window.__GS_DEBUG__) console.log(`Auto Speed Up: ${currentTempo} -> ${newTempo} BPM`);
         }
       }
     }
@@ -309,7 +309,7 @@ export class GrooveWriter {
     };
     
     this.myGrooveUtils.saveToLocalStorage('autoSpeedUpDefaults', defaults);
-    console.log('Auto Speed Up defaults saved:', defaults);
+    if (window.__GS_DEBUG__) console.log('Auto Speed Up defaults saved:', defaults);
   }
 
   loadAutoSpeedUpDefaults() {
