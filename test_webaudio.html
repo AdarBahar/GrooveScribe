@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebAudio Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .log {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebAudio.js Test</h1>
+    
+    <div class="test-container">
+        <h3>Script Loading Test</h3>
+        <div class="status info" id="loadStatus">Loading scripts...</div>
+        <div class="log" id="loadLog">Script loading log will appear here...</div>
+    </div>
+
+    <div class="test-container">
+        <h3>WebAudio Function Test</h3>
+        <div class="status info" id="functionStatus">Testing WebAudio functions...</div>
+        <div class="log" id="functionLog">Function test log will appear here...</div>
+    </div>
+
+    <!-- Load scripts in the same order as main application -->
+    <script src="./MIDI.js/js/MIDI/AudioDetect.js"></script>
+    <script src="./MIDI.js/js/MIDI/Plugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/WebAudio.js"></script>
+    <script src="./MIDI.js/js/MIDI/LoadPlugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/Player.js"></script>
+
+    <script>
+        let loadLog = [];
+        let functionLog = [];
+
+        function updateLoadStatus(message, type = 'info') {
+            const status = document.getElementById('loadStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function updateFunctionStatus(message, type = 'info') {
+            const status = document.getElementById('functionStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function addLoadLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            loadLog.push(`[${timestamp}] ${message}`);
+            document.getElementById('loadLog').textContent = loadLog.join('\n');
+            console.log(`[LOAD] ${message}`);
+        }
+
+        function addFunctionLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            functionLog.push(`[${timestamp}] ${message}`);
+            document.getElementById('functionLog').textContent = functionLog.join('\n');
+            console.log(`[FUNCTION] ${message}`);
+        }
+
+        // Test script loading
+        window.addEventListener('load', function() {
+            addLoadLog('Page loaded, testing script availability...');
+            
+            // Test MIDI object
+            if (typeof MIDI !== 'undefined') {
+                addLoadLog('✅ MIDI object is available');
+                updateLoadStatus('MIDI object loaded successfully', 'success');
+            } else {
+                addLoadLog('❌ MIDI object is not available');
+                updateLoadStatus('MIDI object failed to load', 'error');
+                return;
+            }
+
+            // Test WebAudio object
+            if (typeof MIDI.WebAudio !== 'undefined') {
+                addLoadLog('✅ MIDI.WebAudio object is available');
+                addLoadLog(`MIDI.WebAudio.api: ${MIDI.WebAudio.api}`);
+            } else {
+                addLoadLog('❌ MIDI.WebAudio object is not available');
+                updateLoadStatus('WebAudio object failed to load', 'error');
+                return;
+            }
+
+            // Test connect function
+            if (typeof MIDI.WebAudio.connect === 'function') {
+                addLoadLog('✅ MIDI.WebAudio.connect function is available');
+                updateLoadStatus('All scripts loaded successfully', 'success');
+                testWebAudioFunctions();
+            } else {
+                addLoadLog('❌ MIDI.WebAudio.connect function is not available');
+                addLoadLog(`Type of MIDI.WebAudio.connect: ${typeof MIDI.WebAudio.connect}`);
+                updateLoadStatus('WebAudio.connect function missing', 'error');
+            }
+        });
+
+        function testWebAudioFunctions() {
+            addFunctionLog('Starting WebAudio function tests...');
+            
+            try {
+                // Test connect function
+                addFunctionLog('Testing MIDI.WebAudio.connect...');
+                
+                MIDI.WebAudio.connect({
+                    callback: function() {
+                        addFunctionLog('✅ WebAudio.connect callback executed successfully');
+                        
+                        // Test other functions
+                        testOtherFunctions();
+                        
+                        updateFunctionStatus('All WebAudio functions working', 'success');
+                    }
+                });
+                
+                addFunctionLog('✅ MIDI.WebAudio.connect called without errors');
+                
+            } catch (error) {
+                addFunctionLog(`❌ Error testing WebAudio.connect: ${error.message}`);
+                updateFunctionStatus(`WebAudio test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testOtherFunctions() {
+            addFunctionLog('Testing other WebAudio functions...');
+            
+            // Test programChange
+            if (typeof MIDI.programChange === 'function') {
+                addFunctionLog('✅ MIDI.programChange is available');
+                try {
+                    MIDI.programChange(9, 127);
+                    addFunctionLog('✅ MIDI.programChange(9, 127) executed successfully');
+                } catch (e) {
+                    addFunctionLog(`❌ Error calling MIDI.programChange: ${e.message}`);
+                }
+            } else {
+                addFunctionLog('❌ MIDI.programChange is not available');
+            }
+
+            // Test setVolume
+            if (typeof MIDI.setVolume === 'function') {
+                addFunctionLog('✅ MIDI.setVolume is available');
+            } else {
+                addFunctionLog('❌ MIDI.setVolume is not available');
+            }
+
+            // Test noteOn
+            if (typeof MIDI.noteOn === 'function') {
+                addFunctionLog('✅ MIDI.noteOn is available');
+            } else {
+                addFunctionLog('❌ MIDI.noteOn is not available');
+            }
+
+            addFunctionLog('Function tests completed');
+        }
+
+        // Monitor for errors
+        window.addEventListener('error', function(event) {
+            addLoadLog(`JavaScript Error: ${event.message} at ${event.filename}:${event.lineno}`);
+            updateLoadStatus(`Script error: ${event.message}`, 'error');
+        });
+    </script>
+</body>
+</html>

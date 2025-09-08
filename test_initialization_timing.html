@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initialization Timing Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #e9e9e9;
+        }
+        .timeline {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Initialization Timing Test</h1>
+    
+    <div class="test-container">
+        <div class="test-title">Test URL Parameter Loading with MIDI Initialization</div>
+        <p>This test verifies that URL parameters are processed after MIDI initialization completes.</p>
+        
+        <button onclick="testInitializationTiming()">Test Initialization Timing</button>
+        <button onclick="testMultipleLoads()">Test Multiple Loads</button>
+        <button onclick="clearLog()">Clear Log</button>
+        
+        <div class="status info" id="status">Click a test button to verify the initialization timing fix</div>
+        
+        <div class="timeline" id="timeline">
+            <strong>Initialization Timeline:</strong><br>
+            <span id="timelineContent">No test run yet</span>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">Play Button Functionality Test</div>
+        <p>Test if play buttons are functional immediately after page load with URL parameters:</p>
+        
+        <button onclick="testPlayButtonsReady()">Test Play Buttons</button>
+        <button onclick="simulateURLLoad()">Simulate URL Load</button>
+        
+        <div class="status info" id="playButtonStatus">Click to test play button functionality</div>
+    </div>
+
+    <!-- Load the same scripts as the main application -->
+    <script src="./MIDI.js/js/MIDI/AudioDetect.js"></script>
+    <script src="./MIDI.js/js/MIDI/LoadPlugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/Plugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/Player.js"></script>
+    <script src="./MIDI.js/inc/DOMLoader.XMLHttp.js"></script>
+    <script src="./MIDI.js/inc/jasmid/stream.js"></script>
+    <script src="./MIDI.js/inc/jasmid/midifile.js"></script>
+    <script src="./MIDI.js/inc/jasmid/replayer.js"></script>
+    <script src="./MIDI.js/inc/Base64.js"></script>
+    <script src="./MIDI.js/inc/base64binary.js"></script>
+    <script src="js/abc2svg-1.js"></script>
+    <script src="js/jsmidgen.js"></script>
+    <script src="js/groove_writer.js"></script>
+    <script src="js/groove_utils.js"></script>
+    <script src="js/grooves.js"></script>
+
+    <script>
+        let initializationLog = [];
+        let testGrooveWriter = null;
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function updatePlayButtonStatus(message, type = 'info') {
+            const status = document.getElementById('playButtonStatus');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function updateTimeline() {
+            const timeline = document.getElementById('timelineContent');
+            timeline.innerHTML = initializationLog.join('<br>');
+        }
+
+        function logEvent(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            initializationLog.push(`[${timestamp}] ${message}`);
+            updateTimeline();
+            console.log(`[INIT TEST] ${message}`);
+        }
+
+        function clearLog() {
+            initializationLog = [];
+            updateTimeline();
+            updateStatus('Log cleared');
+        }
+
+        function testInitializationTiming() {
+            updateStatus('Testing initialization timing...', 'info');
+            logEvent('Starting initialization timing test');
+            
+            try {
+                // Create a new GrooveWriter instance to test
+                if (typeof GrooveWriter !== 'undefined') {
+                    logEvent('GrooveWriter constructor available');
+                    testGrooveWriter = new GrooveWriter();
+                    logEvent('GrooveWriter instance created');
+                    
+                    // Override the midiInitialized callback to track timing
+                    const originalCallback = testGrooveWriter.myGrooveUtils.midiEventCallbacks.midiInitialized;
+                    testGrooveWriter.myGrooveUtils.midiEventCallbacks.midiInitialized = function(root) {
+                        logEvent('MIDI initialization completed');
+                        originalCallback(root);
+                        logEvent('Play buttons should now be functional');
+                    };
+                    
+                    // Test the new initialization method
+                    if (typeof testGrooveWriter.initializeMidiThenLoadURL === 'function') {
+                        logEvent('New initializeMidiThenLoadURL method found');
+                        logEvent('Calling initializeMidiThenLoadURL...');
+                        testGrooveWriter.initializeMidiThenLoadURL();
+                        updateStatus('Initialization test started - check timeline for progress', 'info');
+                    } else {
+                        logEvent('ERROR: initializeMidiThenLoadURL method not found');
+                        updateStatus('Test failed: New initialization method not found', 'error');
+                    }
+                } else {
+                    logEvent('ERROR: GrooveWriter constructor not available');
+                    updateStatus('Test failed: GrooveWriter not available', 'error');
+                }
+            } catch (error) {
+                logEvent(`ERROR: ${error.message}`);
+                updateStatus(`Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        function testMultipleLoads() {
+            updateStatus('Testing multiple loads...', 'info');
+            logEvent('Testing multiple initialization cycles');
+            
+            let loadCount = 0;
+            const maxLoads = 3;
+            
+            function performLoad() {
+                loadCount++;
+                logEvent(`Load attempt ${loadCount}/${maxLoads}`);
+                
+                try {
+                    const testWriter = new GrooveWriter();
+                    testWriter.myGrooveUtils.midiEventCallbacks.midiInitialized = function(root) {
+                        logEvent(`Load ${loadCount} - MIDI initialized successfully`);
+                        if (loadCount < maxLoads) {
+                            setTimeout(performLoad, 1000);
+                        } else {
+                            updateStatus('Multiple load test completed - check timeline', 'success');
+                        }
+                    };
+                    
+                    if (typeof testWriter.initializeMidiThenLoadURL === 'function') {
+                        testWriter.initializeMidiThenLoadURL();
+                    } else {
+                        testWriter.myGrooveUtils.oneTimeInitializeMidi();
+                    }
+                } catch (error) {
+                    logEvent(`Load ${loadCount} failed: ${error.message}`);
+                    updateStatus(`Multiple load test failed at load ${loadCount}`, 'error');
+                }
+            }
+            
+            performLoad();
+        }
+
+        function testPlayButtonsReady() {
+            updatePlayButtonStatus('Testing play button readiness...', 'info');
+            
+            if (testGrooveWriter && testGrooveWriter.myGrooveUtils) {
+                const playButtonId = `midiPlayImage${testGrooveWriter.myGrooveUtils.grooveUtilsUniqueIndex}`;
+                const playButton = document.getElementById(playButtonId);
+                
+                if (playButton) {
+                    if (playButton.onclick) {
+                        updatePlayButtonStatus('✓ Play button is functional and ready', 'success');
+                    } else {
+                        updatePlayButtonStatus('✗ Play button exists but onclick handler not set', 'error');
+                    }
+                } else {
+                    updatePlayButtonStatus('✗ Play button not found in DOM', 'error');
+                }
+            } else {
+                updatePlayButtonStatus('✗ No test GrooveWriter instance available', 'error');
+            }
+        }
+
+        function simulateURLLoad() {
+            updatePlayButtonStatus('Simulating URL parameter load...', 'info');
+            
+            if (testGrooveWriter) {
+                try {
+                    // Simulate loading URL parameters
+                    const testURL = '?TimeSig=4/4&Div=16&Tempo=80&Measures=1&H=|xxxxxxxxxxxxxxxx|&S=|----O-------O---|&K=|o-------o-------|';
+                    
+                    if (typeof testGrooveWriter.loadNewGroove === 'function') {
+                        testGrooveWriter.loadNewGroove(testURL);
+                        updatePlayButtonStatus('✓ URL parameters loaded successfully', 'success');
+                    } else {
+                        updatePlayButtonStatus('✗ loadNewGroove method not available', 'error');
+                    }
+                } catch (error) {
+                    updatePlayButtonStatus(`✗ URL load failed: ${error.message}`, 'error');
+                }
+            } else {
+                updatePlayButtonStatus('✗ No test GrooveWriter instance available', 'error');
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            updateStatus('Page loaded. Ready to test initialization timing fix.');
+            logEvent('Test page loaded and ready');
+        });
+
+        // Monitor for errors
+        window.addEventListener('error', (event) => {
+            logEvent(`JavaScript Error: ${event.message}`);
+            console.error('Test page error:', event);
+        });
+    </script>
+</body>
+</html>

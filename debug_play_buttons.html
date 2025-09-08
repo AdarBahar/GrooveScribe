@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play Button Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .debug-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 15px;
+            border: 1px solid #ccc;
+            background: #f9f9f9;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #e9e9e9;
+        }
+        .log {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        #midiPlayer {
+            border: 2px solid #007bff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h1>Play Button Debug Test</h1>
+    
+    <div class="debug-container">
+        <div class="debug-title">MIDI Player Container</div>
+        <p>This is where the MIDI player will be inserted:</p>
+        <div id="midiPlayer">MIDI Player will appear here</div>
+    </div>
+
+    <div class="debug-container">
+        <div class="debug-title">Debug Controls</div>
+        <button onclick="initializeGrooveWriter()">Initialize GrooveWriter</button>
+        <button onclick="checkPlayButtons()">Check Play Buttons</button>
+        <button onclick="loadTestURL()">Load Test URL</button>
+        <button onclick="clearDebugLog()">Clear Log</button>
+        
+        <div class="status info" id="status">Click Initialize GrooveWriter to start</div>
+    </div>
+
+    <div class="debug-container">
+        <div class="debug-title">Debug Log</div>
+        <div class="log" id="debugLog">Debug log will appear here...</div>
+    </div>
+
+    <!-- Load the same scripts as the main application -->
+    <script src="./MIDI.js/js/MIDI/AudioDetect.js"></script>
+    <script src="./MIDI.js/js/MIDI/LoadPlugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/Plugin.js"></script>
+    <script src="./MIDI.js/js/MIDI/Player.js"></script>
+    <script src="./MIDI.js/inc/DOMLoader.XMLHttp.js"></script>
+    <script src="./MIDI.js/inc/jasmid/stream.js"></script>
+    <script src="./MIDI.js/inc/jasmid/midifile.js"></script>
+    <script src="./MIDI.js/inc/jasmid/replayer.js"></script>
+    <script src="./MIDI.js/inc/Base64.js"></script>
+    <script src="./MIDI.js/inc/base64binary.js"></script>
+    <script src="js/abc2svg-1.js"></script>
+    <script src="js/jsmidgen.js"></script>
+    <script src="js/groove_writer.js"></script>
+    <script src="js/groove_utils.js"></script>
+    <script src="js/grooves.js"></script>
+
+    <script>
+        let debugGrooveWriter = null;
+        let debugLog = [];
+
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+
+        function logDebug(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            debugLog.push(logMessage);
+            
+            const debugLogElement = document.getElementById('debugLog');
+            debugLogElement.textContent = debugLog.join('\n');
+            debugLogElement.scrollTop = debugLogElement.scrollHeight;
+            
+            console.log(`[DEBUG] ${message}`);
+        }
+
+        function clearDebugLog() {
+            debugLog = [];
+            document.getElementById('debugLog').textContent = 'Debug log cleared...';
+            updateStatus('Debug log cleared');
+        }
+
+        function initializeGrooveWriter() {
+            updateStatus('Initializing GrooveWriter...', 'info');
+            logDebug('Starting GrooveWriter initialization');
+            
+            try {
+                if (typeof GrooveWriter !== 'undefined') {
+                    logDebug('GrooveWriter constructor available');
+                    debugGrooveWriter = new GrooveWriter();
+                    logDebug('GrooveWriter instance created');
+                    
+                    // Override callbacks to track progress
+                    const originalMidiInitialized = debugGrooveWriter.myGrooveUtils.midiEventCallbacks.midiInitialized;
+                    debugGrooveWriter.myGrooveUtils.midiEventCallbacks.midiInitialized = function(root) {
+                        logDebug('MIDI initialization callback triggered');
+                        originalMidiInitialized(root);
+                        logDebug('Original MIDI initialization completed');
+                        checkPlayButtons();
+                    };
+                    
+                    // Add MIDI player to page
+                    logDebug('Adding MIDI player to page');
+                    debugGrooveWriter.myGrooveUtils.AddMidiPlayerToPage("midiPlayer", 16);
+                    logDebug('MIDI player HTML added');
+                    
+                    // Test the new initialization method
+                    if (typeof debugGrooveWriter.initializeMidiThenLoadURL === 'function') {
+                        logDebug('Using new initializeMidiThenLoadURL method');
+                        debugGrooveWriter.initializeMidiThenLoadURL();
+                    } else {
+                        logDebug('Fallback to old initialization method');
+                        debugGrooveWriter.myGrooveUtils.oneTimeInitializeMidi();
+                    }
+                    
+                    updateStatus('GrooveWriter initialized - waiting for MIDI...', 'info');
+                } else {
+                    logDebug('ERROR: GrooveWriter constructor not available');
+                    updateStatus('GrooveWriter not available', 'error');
+                }
+            } catch (error) {
+                logDebug(`ERROR during initialization: ${error.message}`);
+                updateStatus(`Initialization failed: ${error.message}`, 'error');
+            }
+        }
+
+        function checkPlayButtons() {
+            logDebug('Checking play button status');
+            
+            if (!debugGrooveWriter) {
+                logDebug('No GrooveWriter instance available');
+                updateStatus('No GrooveWriter instance', 'error');
+                return;
+            }
+            
+            const uniqueIndex = debugGrooveWriter.myGrooveUtils.grooveUtilsUniqueIndex;
+            logDebug(`Looking for play buttons with unique index: ${uniqueIndex}`);
+            
+            const playButtonId = `midiPlayImage${uniqueIndex}`;
+            const playPlusButtonId = `midiPlayPlusImage${uniqueIndex}`;
+            
+            const playButton = document.getElementById(playButtonId);
+            const playPlusButton = document.getElementById(playPlusButtonId);
+            
+            logDebug(`Play button (${playButtonId}): ${playButton ? 'Found' : 'Not found'}`);
+            logDebug(`Play+ button (${playPlusButtonId}): ${playPlusButton ? 'Found' : 'Not found'}`);
+            
+            if (playButton) {
+                logDebug(`Play button onclick: ${playButton.onclick ? 'Set' : 'Not set'}`);
+                logDebug(`Play button className: ${playButton.className}`);
+            }
+            
+            if (playPlusButton) {
+                logDebug(`Play+ button onclick: ${playPlusButton.onclick ? 'Set' : 'Not set'}`);
+                logDebug(`Play+ button className: ${playPlusButton.className}`);
+            }
+            
+            if (playButton && playButton.onclick) {
+                updateStatus('✓ Play buttons are functional', 'success');
+            } else if (playButton) {
+                updateStatus('✗ Play buttons exist but not functional', 'error');
+            } else {
+                updateStatus('✗ Play buttons not found', 'error');
+            }
+        }
+
+        function loadTestURL() {
+            logDebug('Loading test URL parameters');
+            
+            if (!debugGrooveWriter) {
+                logDebug('No GrooveWriter instance available');
+                updateStatus('No GrooveWriter instance', 'error');
+                return;
+            }
+            
+            try {
+                const testURL = '?TimeSig=4/4&Div=16&Tempo=80&Measures=1&H=|xxxxxxxxxxxxxxxx|&S=|----O-------O---|&K=|o-------o-------|';
+                logDebug(`Loading URL: ${testURL}`);
+                
+                if (typeof debugGrooveWriter.loadNewGroove === 'function') {
+                    debugGrooveWriter.loadNewGroove(testURL);
+                    logDebug('URL parameters loaded successfully');
+                    updateStatus('✓ Test URL loaded', 'success');
+                    
+                    // Check play buttons again after URL load
+                    setTimeout(() => {
+                        logDebug('Checking play buttons after URL load');
+                        checkPlayButtons();
+                    }, 1000);
+                } else {
+                    logDebug('loadNewGroove method not available');
+                    updateStatus('loadNewGroove method not available', 'error');
+                }
+            } catch (error) {
+                logDebug(`ERROR loading URL: ${error.message}`);
+                updateStatus(`URL load failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            logDebug('Debug page loaded and ready');
+            updateStatus('Page loaded. Click Initialize GrooveWriter to start.');
+        });
+
+        // Monitor for errors
+        window.addEventListener('error', (event) => {
+            logDebug(`JavaScript Error: ${event.message} at ${event.filename}:${event.lineno}`);
+        });
+    </script>
+</body>
+</html>

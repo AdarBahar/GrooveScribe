@@ -1296,6 +1296,15 @@ function GrooveWriter() {
 		var win;
 
 		switch (help_type) {
+			case "debug_toggle":
+				try {
+					var on = !(window.__GS_DEBUG__ === true);
+					if (typeof window.GS_setDebugLogs === 'function') {
+						window.GS_setDebugLogs(on);
+					}
+				} catch(_) {}
+				break;
+
 			case "help":
 				win = window.open("./gscribe_help.html", '_blank');
 				win.focus();
@@ -3385,8 +3394,8 @@ function GrooveWriter() {
 		// add html for the midi player
 		root.myGrooveUtils.AddMidiPlayerToPage("midiPlayer", class_time_division);
 
-		// load the groove from the URL data if it was passed in.
-		set_Default_notes(window.location.search);
+		// Initialize MIDI first, then load URL data when MIDI is ready
+		root.initializeMidiThenLoadURL();
 
 		root.myGrooveUtils.midiEventCallbacks.loadMidiDataEvent = function (myroot, playStarting) {
 			var midiURL;
@@ -3418,9 +3427,34 @@ function GrooveWriter() {
 
 			hilight_note(note_type, percent_complete);
 		};
+	};
 
+	// New function to handle MIDI initialization before URL loading
+	root.initializeMidiThenLoadURL = function () {
+		// Store the original midiInitialized callback
+		var originalMidiInitialized = root.myGrooveUtils.midiEventCallbacks.midiInitialized;
+
+		// Override the midiInitialized callback to load URL data when MIDI is ready
+		root.myGrooveUtils.midiEventCallbacks.midiInitialized = function (myroot) {
+			// Call the original callback first to set up play buttons
+			originalMidiInitialized(myroot);
+
+			// Now load the groove from the URL data
+			set_Default_notes(window.location.search);
+
+			// Complete the remaining initialization
+			root.completeInitialization();
+
+			// Restore the original callback for future use
+			root.myGrooveUtils.midiEventCallbacks.midiInitialized = originalMidiInitialized;
+		};
+
+		// Initialize MIDI - this will trigger the callback when ready
 		root.myGrooveUtils.oneTimeInitializeMidi();
+	};
 
+	// Complete the initialization after MIDI and URL loading are done
+	root.completeInitialization = function () {
 		// enable or disable swing
 		root.myGrooveUtils.swingEnabled(root.myGrooveUtils.doesDivisionSupportSwing(class_notes_per_measure));
 
@@ -3457,60 +3491,97 @@ function GrooveWriter() {
 
 	// called right before the midi reloads for the next replay
 	// set the new tempo based on the delta required for the time interval
-	var class_our_midi_start_time = null;
-	var class_our_midi_start_tempo = 0;
-	var class_our_last_midi_tempo_increase_time = null;
-	var class_our_last_midi_tempo_increase_remainder = 0;
+var class_our_midi_start_time = null;
+var class_our_midi_start_tempo = 0;
+var class_our_last_midi_tempo_increase_time = null;
+var class_our_last_midi_tempo_increase_remainder = 0;
+// Auto speed up scheduling (wall clock, aligned to bar ends)
+var class_auto_next_increase_at_ms = null;
+var class_auto_interval_ms = null;
+var class_auto_total_amount = null;
+var class_auto_keep_increasing = false;
+var class_auto_step_amount = 1;
+var class_auto_indicator_timer = null;
 	root.metronomeAutoSpeedUpTempoUpdate = function () {
 
-		var totalTempoIncreaseAmount = 1;
-		if (document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount"))
-			totalTempoIncreaseAmount = parseInt(document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount").value, 10);
-		var tempoIncreaseInterval = 60;
-		if (document.getElementById("metronomeAutoSpeedupTempoIncreaseInterval")) {
-			tempoIncreaseInterval = parseInt(document.getElementById("metronomeAutoSpeedupTempoIncreaseInterval").value, 10);
-			tempoIncreaseInterval = tempoIncreaseInterval * 60; // turn mins to secs
-		}
-
-		var keepIncreasingForever = false;
-		if (document.getElementById("metronomeAutoSpeedUpKeepGoingForever"))
-			keepIncreasingForever = document.getElementById("metronomeAutoSpeedUpKeepGoingForever").checked;
-
+		var amountEl = document.getElementById("metronomeAutoSpeedupTempoIncreaseAmount");
+		var intervalEl = document.getElementById("metronomeAutoSpeedupTempoIncreaseInterval");
+		var keepEl = document.getElementById("metronomeAutoSpeedUpKeepGoingForever");
+    var stepAmount = amountEl ? parseInt(amountEl.value, 10) : 1;
+    var intervalMinutes = intervalEl ? parseInt(intervalEl.value, 10) : 1;
+    class_auto_step_amount = stepAmount;
 		var curTempo = root.myGrooveUtils.getTempo();
 
 		var midiStartTime = root.myGrooveUtils.getMidiStartTime();
 		if (class_our_midi_start_time != midiStartTime) {
 			class_our_midi_start_time = midiStartTime;
-			class_our_last_midi_tempo_increase_remainder = 0;
-			class_our_last_midi_tempo_increase_time = new Date(0);
 			class_our_midi_start_tempo = curTempo;
-
-		} else if (!keepIncreasingForever) {
-			if (curTempo >= class_our_midi_start_tempo + totalTempoIncreaseAmount) {
-				return; // don't increase any more after we have gone up the total amount
-			}
-		}
-		var totalMidiPlayTime = root.myGrooveUtils.getMidiPlayTime();
-		var timeDiffMilliseconds = totalMidiPlayTime.getTime() - class_our_last_midi_tempo_increase_time.getTime();
-		var tempoDiffFloat = (totalTempoIncreaseAmount) * (timeDiffMilliseconds / (tempoIncreaseInterval * 1000));
-
-		// round the number down, but keep track of the remainder so we carry it forward.   Otherwise
-		// rounding errors cause us to be way off.
-		tempoDiffFloat += class_our_last_midi_tempo_increase_remainder;
-		var tempoDiffInt = Math.floor(tempoDiffFloat);
-		class_our_last_midi_tempo_increase_remainder = tempoDiffFloat - tempoDiffInt;
-
-		class_our_last_midi_tempo_increase_time = totalMidiPlayTime;
-
-		if (!keepIncreasingForever) {
-			if (curTempo + tempoDiffInt > class_our_midi_start_tempo + totalTempoIncreaseAmount) {
-				// increase to the total max amount, then we are done
-				tempoDiffInt = (class_our_midi_start_tempo + totalTempoIncreaseAmount) - curTempo;
-			}
+        class_auto_total_amount = (keepEl && keepEl.checked) ? Number.POSITIVE_INFINITY : stepAmount;
+        class_auto_keep_increasing = keepEl ? keepEl.checked : false;
+        class_auto_interval_ms = intervalMinutes * 60 * 1000;
+        class_auto_next_increase_at_ms = Date.now() + class_auto_interval_ms;
 		}
 
-		if (tempoDiffInt > 0)
-			root.myGrooveUtils.setTempo(root.myGrooveUtils.getTempo() + tempoDiffInt);
+		var nowMs = Date.now();
+		var shouldIncrease = (class_auto_next_increase_at_ms != null) && (nowMs >= class_auto_next_increase_at_ms);
+		if (!class_auto_keep_increasing && curTempo >= class_our_midi_start_tempo + class_auto_total_amount) {
+			shouldIncrease = false;
+		}
+
+		if (shouldIncrease) {
+        var remaining = class_auto_keep_increasing ? stepAmount : Math.max(0, (class_our_midi_start_tempo + class_auto_total_amount) - curTempo);
+        var step = Math.max(1, Math.min(remaining, stepAmount));
+        var newTempoVal = curTempo + step;
+        root.myGrooveUtils.setTempo(newTempoVal);
+        try { if (window.MIDI && window.MIDI.Player) { 
+            if (typeof window.MIDI.Player.setBPM === 'function') window.MIDI.Player.setBPM(newTempoVal);
+            else window.MIDI.Player.BPM = newTempoVal; 
+        } } catch(_){}
+        try {
+            var nextAt = new Date(class_auto_next_increase_at_ms + class_auto_interval_ms);
+            var hh = String(nextAt.getHours()).padStart(2,'0');
+            var mm = String(nextAt.getMinutes()).padStart(2,'0');
+            var ss = String(nextAt.getSeconds()).padStart(2,'0');
+            root.showSnack(intervalMinutes + " minutes past, increasing BPM by " + step + ". Next at " + hh + ":" + mm + ":" + ss);
+        } catch(_){}
+        class_auto_next_increase_at_ms += class_auto_interval_ms;
+    }
+};
+
+// Auto indicator UI
+root.updateAutoIndicator = function() {
+    try {
+        var el = document.getElementById('gs-auto-indicator');
+        if (!el) return;
+        if (!class_metronome_auto_speed_up_active) { el.style.display = 'none'; return; }
+        el.style.display = 'block';
+        var now = Date.now();
+        var msLeft = (class_auto_next_increase_at_ms||now) - now;
+        if (msLeft < 0) msLeft = 0;
+        var secLeft = Math.round(msLeft/1000);
+        var m = Math.floor(secLeft/60);
+        var s = secLeft % 60;
+        var curTempo = root.myGrooveUtils.getTempo();
+        var nextTempo = curTempo + class_auto_step_amount;
+        var intMin = Math.round((class_auto_interval_ms||60000)/60000);
+        el.textContent = 'Auto Speed Up: +' + class_auto_step_amount + ' BPM every ' + intMin + 'm — Next in ' + m + ':' + String(s).padStart(2,'0') + ' → ' + nextTempo + ' BPM';
+    } catch(_){}
+};
+
+	// Simple snackbar/toast at bottom center
+	root.showSnack = function(message) {
+		try {
+			var el = document.getElementById('gs-snackbar');
+			if (!el) return;
+			el.textContent = message;
+			el.style.opacity = '1';
+			el.style.bottom = '28px';
+			clearTimeout(window.__GS_SNACK_TIMER__);
+			window.__GS_SNACK_TIMER__ = setTimeout(function(){
+				el.style.opacity = '0';
+				el.style.bottom = '20px';
+			}, 3000);
+		} catch(_){}
 	};
 
 	// takes a string of notes encoded in a serialized string and sets the notes on or off
@@ -3933,20 +4004,25 @@ function GrooveWriter() {
 	};
 
 	// Enable auto speed up (called by the Play+ button)
-	root.enableAutoSpeedUp = function() {
-		class_metronome_auto_speed_up_active = true;
-		addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSpeedUp", "menuChecked", true);
-		root.metronomeOptionsMenuSetSelectedState();
-		console.log('Auto Speed Up enabled via Play+ button');
-	};
+root.enableAutoSpeedUp = function() {
+    class_metronome_auto_speed_up_active = true;
+    addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSpeedUp", "menuChecked", true);
+    root.metronomeOptionsMenuSetSelectedState();
+    console.log('Auto Speed Up enabled via Play+ button');
+    try { if (class_auto_indicator_timer) clearInterval(class_auto_indicator_timer); } catch(_){}
+    class_auto_indicator_timer = setInterval(root.updateAutoIndicator, 500);
+    root.updateAutoIndicator();
+};
 
 	// Disable auto speed up (called by the regular Play button)
-	root.disableAutoSpeedUp = function() {
-		class_metronome_auto_speed_up_active = false;
-		addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSpeedUp", "menuChecked", false);
-		root.metronomeOptionsMenuSetSelectedState();
-		console.log('Auto Speed Up disabled via regular Play button');
-	};
+root.disableAutoSpeedUp = function() {
+    class_metronome_auto_speed_up_active = false;
+    addOrRemoveKeywordFromClassById("metronomeOptionsContextMenuSpeedUp", "menuChecked", false);
+    root.metronomeOptionsMenuSetSelectedState();
+    console.log('Auto Speed Up disabled via regular Play button');
+    try { if (class_auto_indicator_timer) clearInterval(class_auto_indicator_timer); } catch(_){}
+    try { var el = document.getElementById('gs-auto-indicator'); if (el) el.style.display = 'none'; } catch(_){}
+};
 
 	root.timeSigPopupOpen = function(type) {
 		var popup = document.getElementById("timeSigPopup");
