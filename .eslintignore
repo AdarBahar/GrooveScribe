@@ -1,0 +1,16 @@
+# Ignore vendored/minified and build outputs
+node_modules/
+.deploy_build/
+dist/
+MIDI.js/
+
+# Third-party/bundled libs
+js/abc2svg-1.js
+js/pablo.js
+js/pablo.min.js
+js/share-button.min.js
+js/jsmidgen.js
+
+# Any other minified JS in js/
+js/*.min.js
+
