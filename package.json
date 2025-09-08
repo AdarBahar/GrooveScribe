@@ -55,7 +55,6 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "abc2svg": "^1.22.14",
     "jsmidgen": "^0.1.5",
     "midi-player-js": "^2.0.7",
     "pablo": "^0.4.1"
