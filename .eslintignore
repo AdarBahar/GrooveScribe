@@ -14,3 +14,8 @@ js/jsmidgen.js
 # Any other minified JS in js/
 js/*.min.js
 
+
+# Legacy/legacy-styled sources (excluded from strict lint)
+js/groove_display.js
+js/groove_utils.js
+
