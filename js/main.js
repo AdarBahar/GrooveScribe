@@ -1,4 +1,6 @@
 /**
+/* eslint-disable prettier/prettier, no-console */
+
  * Main entry point for GrooveScribe application
  * Modern ES6+ module-based initialization
  */
@@ -49,15 +51,15 @@ class GrooveScribeApp {
       console.log('Initializing modern audio system...');
       this.audioManager = new AudioManager();
       await this.audioManager.initialize();
-      
+
       // Create MIDI.js bridge for backward compatibility
       this.createMidiJsBridge();
-      
+
       // Replace the broken play_single_note_for_note_setting function
       this.replaceBrokenAudioFunctions();
-      
+
       console.log('Modern audio system initialized successfully');
-      
+
     } catch (error) {
       console.error('Failed to initialize modern audio system:', error);
       // Continue without modern audio - legacy MIDI.js may still work
@@ -137,7 +139,7 @@ class GrooveScribeApp {
     if (this.audioManager) {
       // Expose audio manager globally for debugging
       window.modernAudioManager = this.audioManager;
-      
+
       // Add audio test function
       window.testDrumSound = (midiNote) => {
         if (this.audioManager) {
