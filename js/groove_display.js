@@ -29,16 +29,18 @@
 /*jslint evil: true */
 /*global GrooveUtils, GrooveDisplay */
 
+/* eslint-disable prettier/prettier, no-console, no-unused-vars, no-var, quotes */
+
 // GrooveDisplay class.   The only one in this file.
 // singleton
-if (typeof(GrooveDisplay) === "undefined") {
+if (typeof window.GrooveDisplay === 'undefined') {
 
-	var GrooveDisplay = {};
+  window.GrooveDisplay = {};
 
-	(function () {
-		"use strict";
+  (function () {
+    'use strict';
 
-		var root = GrooveDisplay;
+    const root = window.GrooveDisplay;
 
 		// list of files already added
 		root.filesadded = "";
