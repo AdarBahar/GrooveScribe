@@ -6,3 +6,25 @@ cordova/platforms/
 mikeLessons.html
 cordova/plugins/
 .idea/
+
+
+# OS and environment
+.DS_Store
+.env*
+
+# Local build output
+.deploy_build/
+dist/
+
+# Node modules (if used locally)
+node_modules/
+
+# Logs and coverage
+npm-debug.log*
+yarn-error.log*
+*.log
+coverage/
+
+# Editor/IDE
+.vscode/
+*.swp

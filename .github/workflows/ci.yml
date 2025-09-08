@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, merge/* ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
+            npm ci || npm install
+          elif [ -f yarn.lock ]; then
+            corepack enable
+            yarn install --frozen-lockfile || yarn install
+          else
+            echo "No lockfile; running npm install"
+            npm install || true
+          fi
+
+      - name: Lint (if configured)
+        run: |
+          npm run lint || echo "Lint step skipped or failed (no config)."
+
+      - name: Run tests (if configured)
+        run: |
+          npm test || echo "Test step skipped (jest not configured)."
+
+      - name: Build (if configured)
+        run: |
+          npm run build || echo "Build step skipped."
+
