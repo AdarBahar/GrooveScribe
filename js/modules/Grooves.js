@@ -261,7 +261,7 @@ export class Grooves {
 
   previewGroove(data) {
     // Implement groove preview functionality
-    console.log('Preview groove:', data);
+    if (window.__GS_DEBUG__) console.log('Preview groove:', data);
     // This could load the groove temporarily and play a short preview
   }
 
@@ -281,7 +281,7 @@ export class Grooves {
       this.grooveLibrary = { ...this.grooveLibrary, ...imported };
       return true;
     } catch (error) {
-      console.error('Failed to import grooves:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to import grooves:', error);
       return false;
     }
   }
@@ -292,7 +292,7 @@ export class Grooves {
       localStorage.setItem('customGrooves', this.exportGrooves());
       return true;
     } catch (error) {
-      console.error('Failed to save grooves to localStorage:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to save grooves to localStorage:', error);
       return false;
     }
   }
@@ -304,7 +304,7 @@ export class Grooves {
         return this.importGrooves(saved);
       }
     } catch (error) {
-      console.error('Failed to load grooves from localStorage:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to load grooves from localStorage:', error);
     }
     return false;
   }

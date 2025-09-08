@@ -16,9 +16,9 @@ export class UIManager {
       this.setupKeyboardShortcuts();
       this.setupResponsiveHandling();
       this.initialized = true;
-      console.log('UIManager initialized');
+      if (window.__GS_DEBUG__) console.log('UIManager initialized');
     } catch (error) {
-      console.error('Failed to initialize UIManager:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to initialize UIManager:', error);
       throw error;
     }
   }

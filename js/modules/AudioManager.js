@@ -92,10 +92,10 @@ export class AudioManager {
       await this.initializeAudioContext();
       await this.loadAudioSamples();
       this.isInitialized = true;
-      console.log('AudioManager initialized successfully');
+      if (window.__GS_DEBUG__) console.log('AudioManager initialized successfully');
       return true;
     } catch (error) {
-      console.error('Failed to initialize AudioManager:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to initialize AudioManager:', error);
       throw error;
     }
   }
@@ -114,9 +114,9 @@ export class AudioManager {
         await this.audioContext.resume();
       }
 
-      console.log('Audio context initialized');
+      if (window.__GS_DEBUG__) console.log('Audio context initialized');
     } catch (error) {
-      console.error('Failed to initialize audio context:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to initialize audio context:', error);
       throw error;
     }
   }
@@ -129,29 +129,29 @@ export class AudioManager {
           const url = basePath + fileName;
           const response = await fetch(url);
           if (!response.ok) {
-            console.warn(`Failed to load sample: ${sampleName} (${fileName})`);
+            if (window.__GS_DEBUG__) console.warn(`Failed to load sample: ${sampleName} (${fileName})`);
             return;
           }
           const arrayBuffer = await response.arrayBuffer();
           const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
           this.audioBuffers[sampleName] = audioBuffer;
-          console.log(`Loaded sample: ${sampleName}`);
+          if (window.__GS_DEBUG__) console.log(`Loaded sample: ${sampleName}`);
         } catch (error) {
-          console.warn(`Error loading sample ${sampleName}:`, error);
+          if (window.__GS_DEBUG__) console.warn(`Error loading sample ${sampleName}:`, error);
         }
       });
 
       await Promise.all(loadPromises);
-      console.log('Audio samples loaded:', Object.keys(this.audioBuffers));
+      if (window.__GS_DEBUG__) console.log('Audio samples loaded:', Object.keys(this.audioBuffers));
     } catch (error) {
-      console.warn('Some audio samples failed to load:', error);
+      if (window.__GS_DEBUG__) console.warn('Some audio samples failed to load:', error);
     }
   }
 
   // Main API method - plays a drum sound by MIDI note number (replaces MIDI.js)
   playMidiNote(channel, midiNote, velocity = 127, delay = 0) {
     if (!this.isInitialized) {
-      console.warn('AudioManager not initialized');
+      if (window.__GS_DEBUG__) console.warn('AudioManager not initialized');
       return false;
     }
 
@@ -194,7 +194,7 @@ export class AudioManager {
 
       this.scheduleAutoSpeedUp();
     } catch (error) {
-      console.error('Failed to start playback:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to start playback:', error);
       this.isPlaying = false;
       throw error;
     }

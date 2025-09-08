@@ -110,14 +110,14 @@ export class GrooveUtils {
 
       return audioContext;
     } catch (error) {
-      console.error('Failed to initialize audio context:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to initialize audio context:', error);
       throw error;
     }
   }
 
   // Improved error handling
   handleError(error, context = 'Unknown') {
-    console.error(`Error in ${context}:`, error);
+    if (window.__GS_DEBUG__) console.error(`Error in ${context}:`, error);
 
     // Show user-friendly error message
     this.showNotification(`An error occurred: ${error.message}`, 'error');
@@ -159,7 +159,7 @@ export class GrooveUtils {
       localStorage.setItem(key, JSON.stringify(data));
       return true;
     } catch (error) {
-      console.error('Failed to save to localStorage:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to save to localStorage:', error);
       return false;
     }
   }
@@ -169,7 +169,7 @@ export class GrooveUtils {
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : defaultValue;
     } catch (error) {
-      console.error('Failed to load from localStorage:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to load from localStorage:', error);
       return defaultValue;
     }
   }

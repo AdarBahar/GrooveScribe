@@ -89,22 +89,22 @@ export class GrooveWriter {
   setupEventCallbacks() {
     // Set up MIDI event callbacks
     this.myGrooveUtils.midiEventCallbacks = {
-      loadMidiDataEvent: (root, playStarting) => {
+      loadMidiDataEvent: (_root, playStarting) => {
         this.handleMidiDataLoad(playStarting);
       },
-      notePlaying: (root, noteType, percentComplete) => {
+      notePlaying: (_root, noteType, percentComplete) => {
         this.handleNotePlaying(noteType, percentComplete);
       },
-      playEvent: root => {
+      playEvent: (_root) => {
         this.handlePlayEvent();
       },
-      stopEvent: root => {
+      stopEvent: (_root) => {
         this.handleStopEvent();
       },
-      pauseEvent: root => {
+      pauseEvent: (_root) => {
         this.handlePauseEvent();
       },
-      midiInitialized: root => {
+      midiInitialized: (_root) => {
         this.handleMidiInitialized();
       }
     };
@@ -190,14 +190,14 @@ export class GrooveWriter {
     );
 
     if (playButton) {
-      playButton.onclick = event => {
+      playButton.onclick = (_event) => {
         this.myGrooveUtils.lastClickedButton = 'normal';
         this.myGrooveUtils.startOrStopMIDI_playback();
       };
     }
 
     if (playPlusButton) {
-      playPlusButton.onclick = event => {
+      playPlusButton.onclick = (_event) => {
         this.myGrooveUtils.startAutoSpeedUpPlayback();
       };
     }
@@ -294,7 +294,7 @@ export class GrooveWriter {
     this.updateAutoSpeedUpOutputLabels();
   }
 
-  closeMetronomeAutoSpeedupConfiguration(type) {
+  closeMetronomeAutoSpeedupConfiguration(_type) {
     const popup = document.getElementById('metronomeAutoSpeedupConfiguration');
 
     // Save as default if checkbox is checked
