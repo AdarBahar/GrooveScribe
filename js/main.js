@@ -1,6 +1,6 @@
 /**
 /* eslint-disable prettier/prettier, no-console */
-
+/*
  * Main entry point for GrooveScribe application
  * Modern ES6+ module-based initialization
  */

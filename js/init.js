@@ -1,6 +1,6 @@
 /*
 /* eslint-disable prettier/prettier, no-empty, no-console, prefer-template */
-
+/*
  * GrooveScribe initialization bootstrap
  * - Ensures correct startup order after deferred script loads
  * - Avoids double init; retries if dependencies aren’t ready yet

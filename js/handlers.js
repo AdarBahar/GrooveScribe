@@ -1,6 +1,6 @@
 /*
 /* eslint-disable prettier/prettier */
-
+/*
  * Event handlers migrated from inline onclick attributes
  * Keeps HTML clean and uses addEventListener with proper preventDefault
  */
