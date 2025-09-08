@@ -22,14 +22,17 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
-            npm ci || npm install
+            npm ci
           elif [ -f yarn.lock ]; then
             corepack enable
             yarn install --frozen-lockfile || yarn install
           else
             echo "No lockfile; running npm install"
-            npm install || true
+            npm install
           fi
+
+      - name: Verify eslint availability
+        run: npx --no-install eslint -v || (echo "eslint not found after install" && exit 1)
 
       - name: Lint
         run: npm run -s lint
