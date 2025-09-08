@@ -1,6 +1,5 @@
-/**
 /* eslint-disable prettier/prettier, object-shorthand, no-empty, no-console */
-
+/*
  * Modern Audio System for GrooveScribe
  * Standalone version that works without ES6 modules
  * Replaces broken MIDI.js + soundfont system with Web Audio API + MP3 files

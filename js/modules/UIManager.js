@@ -352,11 +352,14 @@ export class UIManager {
   }
 
   // Debounced text input handler
-  debounceTextInput = this.debounce((target) => {
-    if (window.myGrooveWriter) {
-      window.myGrooveWriter.refresh_ABC();
-    }
-  }, 500);
+  debounceTextInput(target) {
+    const debounced = this.debounce(function () {
+      if (window.myGrooveWriter) {
+        window.myGrooveWriter.refresh_ABC();
+      }
+    }, 500);
+    debounced(target);
+  }
 
   // Utility debounce function
   debounce(func, wait) {
