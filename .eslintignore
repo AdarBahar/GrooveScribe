@@ -19,3 +19,5 @@ js/*.min.js
 js/groove_display.js
 js/groove_utils.js
 
+js/groove_writer.js
+
