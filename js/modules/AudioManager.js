@@ -19,71 +19,71 @@ export class AudioManager {
     this.playbackStartTime = null;
     this.lastSpeedUpTime = null;
     this.audioBuffers = {};
-    
+
     // MIDI note to drum sample mapping (GrooveScribe specific)
     this.midiToSample = {
       // Kick
-      35: 'kick',           // constant_OUR_MIDI_KICK_NORMAL
-      
+      35: 'kick', // constant_OUR_MIDI_KICK_NORMAL
+
       // Snare variations
-      38: 'snare_normal',   // constant_OUR_MIDI_SNARE_NORMAL  
-      21: 'snare_ghost',    // constant_OUR_MIDI_SNARE_GHOST
-      22: 'snare_accent',   // constant_OUR_MIDI_SNARE_ACCENT
-      37: 'snare_xstick',   // constant_OUR_MIDI_SNARE_XSTICK
-      25: 'snare_flam',     // constant_OUR_MIDI_SNARE_FLAM
-      23: 'snare_drag',     // constant_OUR_MIDI_SNARE_DRAG
-      24: 'snare_buzz',     // constant_OUR_MIDI_SNARE_BUZZ
-      
+      38: 'snare_normal', // constant_OUR_MIDI_SNARE_NORMAL
+      21: 'snare_ghost', // constant_OUR_MIDI_SNARE_GHOST
+      22: 'snare_accent', // constant_OUR_MIDI_SNARE_ACCENT
+      37: 'snare_xstick', // constant_OUR_MIDI_SNARE_XSTICK
+      25: 'snare_flam', // constant_OUR_MIDI_SNARE_FLAM
+      23: 'snare_drag', // constant_OUR_MIDI_SNARE_DRAG
+      24: 'snare_buzz', // constant_OUR_MIDI_SNARE_BUZZ
+
       // Hi-hat variations
-      42: 'hihat_normal',   // constant_OUR_MIDI_HIHAT_NORMAL
-      46: 'hihat_open',     // constant_OUR_MIDI_HIHAT_OPEN
-      44: 'hihat_foot',     // constant_OUR_MIDI_HIHAT_FOOT
-      108: 'hihat_accent',  // new mapping
-      26: 'hihat_accent',   // legacy alias (was constant_OUR_MIDI_HIHAT_ACCENT)
-      51: 'ride',           // constant_OUR_MIDI_HIHAT_RIDE
-      53: 'ride_bell',      // constant_OUR_MIDI_HIHAT_RIDE_BELL
-      105: 'cowbell',       // new mapping
-      56: 'cowbell',        // legacy alias (was constant_OUR_MIDI_HIHAT_COW_BELL)
-      49: 'crash',          // constant_OUR_MIDI_HIHAT_CRASH
-      52: 'stacker',        // new mapping
-      55: 'stacker',        // legacy alias (was constant_OUR_MIDI_HIHAT_STACKER)
-      
+      42: 'hihat_normal', // constant_OUR_MIDI_HIHAT_NORMAL
+      46: 'hihat_open', // constant_OUR_MIDI_HIHAT_OPEN
+      44: 'hihat_foot', // constant_OUR_MIDI_HIHAT_FOOT
+      108: 'hihat_accent', // new mapping
+      26: 'hihat_accent', // legacy alias (was constant_OUR_MIDI_HIHAT_ACCENT)
+      51: 'ride', // constant_OUR_MIDI_HIHAT_RIDE
+      53: 'ride_bell', // constant_OUR_MIDI_HIHAT_RIDE_BELL
+      105: 'cowbell', // new mapping
+      56: 'cowbell', // legacy alias (was constant_OUR_MIDI_HIHAT_COW_BELL)
+      49: 'crash', // constant_OUR_MIDI_HIHAT_CRASH
+      52: 'stacker', // new mapping
+      55: 'stacker', // legacy alias (was constant_OUR_MIDI_HIHAT_STACKER)
+
       // Toms
-      48: 'tom1',           // constant_OUR_MIDI_TOM1_NORMAL (High Tom)
-      47: 'tom2',           // constant_OUR_MIDI_TOM2_NORMAL (Mid Tom)
-      45: 'tom3',           // constant_OUR_MIDI_TOM3_NORMAL (Low Tom) 
-      43: 'tom4',           // constant_OUR_MIDI_TOM4_NORMAL (Floor Tom)
-      
+      48: 'tom1', // constant_OUR_MIDI_TOM1_NORMAL (High Tom)
+      47: 'tom2', // constant_OUR_MIDI_TOM2_NORMAL (Mid Tom)
+      45: 'tom3', // constant_OUR_MIDI_TOM3_NORMAL (Low Tom)
+      43: 'tom4', // constant_OUR_MIDI_TOM4_NORMAL (Floor Tom)
+
       // Metronome
-      76: 'metronome_normal',  // constant_OUR_MIDI_HIHAT_METRONOME_NORMAL
-      77: 'metronome_accent'   // constant_OUR_MIDI_HIHAT_METRONOME_ACCENT
+      76: 'metronome_normal', // constant_OUR_MIDI_HIHAT_METRONOME_NORMAL
+      77: 'metronome_accent' // constant_OUR_MIDI_HIHAT_METRONOME_ACCENT
     };
-    
+
     // Sample file name mapping
     this.sampleFiles = {
-      'kick': 'Kick.mp3',
-      'snare_normal': 'Snare Normal.mp3',
-      'snare_ghost': 'Snare Ghost.mp3', 
-      'snare_accent': 'Snare Accent.mp3',
-      'snare_xstick': 'Snare Cross Stick.mp3',
-      'snare_flam': 'Snare Flam.mp3',
-      'snare_drag': 'Drag.mp3',
-      'snare_buzz': 'Buzz.mp3',
-      'hihat_normal': 'Hi Hat Normal.mp3',
-      'hihat_open': 'Hi Hat Open.mp3',
-      'hihat_foot': 'Hi Hat Foot.mp3', 
-      'hihat_accent': 'Hi Hat Accent.mp3',
-      'ride': 'Ride.mp3',
-      'ride_bell': 'Bell.mp3',
-      'cowbell': 'Cowbell.mp3',
-      'crash': 'Crash.mp3',
-      'stacker': 'Stacker.mp3',
-      'tom1': '10 Tom.mp3',        // High Tom
-      'tom2': '16 Tom.mp3',        // Mid Tom  
-      'tom3': 'Rack Tom.mp3',      // Low Tom
-      'tom4': 'Floor Tom.mp3',     // Floor Tom
-      'metronome_normal': 'metronomeClick.mp3',
-      'metronome_accent': 'metronome1Count.mp3'
+      kick: 'Kick.mp3',
+      snare_normal: 'Snare Normal.mp3',
+      snare_ghost: 'Snare Ghost.mp3',
+      snare_accent: 'Snare Accent.mp3',
+      snare_xstick: 'Snare Cross Stick.mp3',
+      snare_flam: 'Snare Flam.mp3',
+      snare_drag: 'Drag.mp3',
+      snare_buzz: 'Buzz.mp3',
+      hihat_normal: 'Hi Hat Normal.mp3',
+      hihat_open: 'Hi Hat Open.mp3',
+      hihat_foot: 'Hi Hat Foot.mp3',
+      hihat_accent: 'Hi Hat Accent.mp3',
+      ride: 'Ride.mp3',
+      ride_bell: 'Bell.mp3',
+      cowbell: 'Cowbell.mp3',
+      crash: 'Crash.mp3',
+      stacker: 'Stacker.mp3',
+      tom1: '10 Tom.mp3', // High Tom
+      tom2: '16 Tom.mp3', // Mid Tom
+      tom3: 'Rack Tom.mp3', // Low Tom
+      tom4: 'Floor Tom.mp3', // Floor Tom
+      metronome_normal: 'metronomeClick.mp3',
+      metronome_accent: 'metronome1Count.mp3'
     };
   }
 
@@ -92,10 +92,10 @@ export class AudioManager {
       await this.initializeAudioContext();
       await this.loadAudioSamples();
       this.isInitialized = true;
-      console.log('AudioManager initialized successfully');
+      if (window.__GS_DEBUG__) console.log('AudioManager initialized successfully');
       return true;
     } catch (error) {
-      console.error('Failed to initialize AudioManager:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to initialize AudioManager:', error);
       throw error;
     }
   }
@@ -108,15 +108,15 @@ export class AudioManager {
       }
 
       this.audioContext = new AudioContext();
-      
+
       // Resume context if suspended (required by modern browsers)
       if (this.audioContext.state === 'suspended') {
         await this.audioContext.resume();
       }
 
-      console.log('Audio context initialized');
+      if (window.__GS_DEBUG__) console.log('Audio context initialized');
     } catch (error) {
-      console.error('Failed to initialize audio context:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to initialize audio context:', error);
       throw error;
     }
   }
@@ -129,29 +129,29 @@ export class AudioManager {
           const url = basePath + fileName;
           const response = await fetch(url);
           if (!response.ok) {
-            console.warn(`Failed to load sample: ${sampleName} (${fileName})`);
+            if (window.__GS_DEBUG__) console.warn(`Failed to load sample: ${sampleName} (${fileName})`);
             return;
           }
           const arrayBuffer = await response.arrayBuffer();
           const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
           this.audioBuffers[sampleName] = audioBuffer;
-          console.log(`Loaded sample: ${sampleName}`);
+          if (window.__GS_DEBUG__) console.log(`Loaded sample: ${sampleName}`);
         } catch (error) {
-          console.warn(`Error loading sample ${sampleName}:`, error);
+          if (window.__GS_DEBUG__) console.warn(`Error loading sample ${sampleName}:`, error);
         }
       });
 
       await Promise.all(loadPromises);
-      console.log('Audio samples loaded:', Object.keys(this.audioBuffers));
+      if (window.__GS_DEBUG__) console.log('Audio samples loaded:', Object.keys(this.audioBuffers));
     } catch (error) {
-      console.warn('Some audio samples failed to load:', error);
+      if (window.__GS_DEBUG__) console.warn('Some audio samples failed to load:', error);
     }
   }
 
   // Main API method - plays a drum sound by MIDI note number (replaces MIDI.js)
   playMidiNote(channel, midiNote, velocity = 127, delay = 0) {
     if (!this.isInitialized) {
-      console.warn('AudioManager not initialized');
+      if (window.__GS_DEBUG__) console.warn('AudioManager not initialized');
       return false;
     }
 
@@ -193,9 +193,8 @@ export class AudioManager {
       }
 
       this.scheduleAutoSpeedUp();
-
     } catch (error) {
-      console.error('Failed to start playback:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to start playback:', error);
       this.isPlaying = false;
       throw error;
     }
@@ -203,11 +202,11 @@ export class AudioManager {
 
   pause() {
     if (!this.isInitialized) return;
-    
+
     this.isPaused = true;
     this.isPlaying = false;
     this.disableAutoSpeedUp();
-    
+
     // Delegate to existing MIDI system
     if (window.myGrooveWriter && window.myGrooveWriter.myGrooveUtils) {
       window.myGrooveWriter.myGrooveUtils.pauseMIDI_playback();
@@ -216,11 +215,11 @@ export class AudioManager {
 
   stop() {
     if (!this.isInitialized) return;
-    
+
     this.isPlaying = false;
     this.isPaused = false;
     this.disableAutoSpeedUp();
-    
+
     // Delegate to existing MIDI system
     if (window.myGrooveWriter && window.myGrooveWriter.myGrooveUtils) {
       window.myGrooveWriter.myGrooveUtils.stopMIDI_playback();
@@ -229,10 +228,10 @@ export class AudioManager {
 
   resume() {
     if (!this.isInitialized || !this.isPaused) return;
-    
+
     this.isPaused = false;
     this.isPlaying = true;
-    
+
     // Delegate to existing MIDI system
     if (window.myGrooveWriter && window.myGrooveWriter.myGrooveUtils) {
       window.myGrooveWriter.myGrooveUtils.resumeMIDI_playback();
@@ -241,7 +240,7 @@ export class AudioManager {
 
   setTempo(bpm) {
     this.currentTempo = Math.max(30, Math.min(300, bpm));
-    
+
     // Update existing MIDI system
     if (window.myGrooveWriter && window.myGrooveWriter.myGrooveUtils) {
       window.myGrooveWriter.myGrooveUtils.setTempo(this.currentTempo);
@@ -294,18 +293,17 @@ export class AudioManager {
     try {
       const source = this.audioContext.createBufferSource();
       const gainNode = this.audioContext.createGain();
-      
+
       source.buffer = this.audioBuffers[sampleName];
       gainNode.gain.value = Math.max(0, Math.min(1, velocity));
-      
+
       source.connect(gainNode);
       gainNode.connect(this.audioContext.destination);
-      
+
       const playTime = when || this.audioContext.currentTime;
       source.start(playTime);
-      
+
       return true;
-      
     } catch (error) {
       console.error(`Failed to play sample ${sampleName}:`, error);
       return false;

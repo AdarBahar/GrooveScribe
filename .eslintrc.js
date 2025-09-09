@@ -44,5 +44,17 @@ module.exports = {
     'Abc': 'readonly',
     'Pablo': 'readonly',
     'Share': 'readonly'
-  }
+  },
+  overrides: [
+    {
+      files: ['js/modules/**/*.js'],
+      rules: {
+        'no-empty': 'error',
+        'no-constant-condition': 'warn',
+        'no-var': 'error',
+        'prefer-const': 'warn',
+        'object-shorthand': 'warn'
+      }
+    }
+  ]
 };

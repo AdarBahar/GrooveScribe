@@ -16,9 +16,9 @@ export class UIManager {
       this.setupKeyboardShortcuts();
       this.setupResponsiveHandling();
       this.initialized = true;
-      console.log('UIManager initialized');
+      if (window.__GS_DEBUG__) console.log('UIManager initialized');
     } catch (error) {
-      console.error('Failed to initialize UIManager:', error);
+      if (window.__GS_DEBUG__) console.error('Failed to initialize UIManager:', error);
       throw error;
     }
   }
@@ -32,7 +32,7 @@ export class UIManager {
 
   handleClick(event) {
     const { target } = event;
-    
+
     // Handle subdivision buttons
     if (target.closest('.subdivision')) {
       this.handleSubdivisionClick(target, event);
@@ -72,7 +72,7 @@ export class UIManager {
 
   handleChange(event) {
     const { target } = event;
-    
+
     // Handle tempo slider
     if (target.id === 'tempoSlider') {
       this.handleTempoChange(target.value);
@@ -94,7 +94,7 @@ export class UIManager {
 
   handleInput(event) {
     const { target } = event;
-    
+
     // Handle text field inputs with debouncing
     if (target.matches('#tuneTitle, #tuneAuthor, #tuneComments')) {
       this.debounceTextInput(target);
@@ -188,13 +188,13 @@ export class UIManager {
   setupKeyboardShortcuts() {
     const shortcuts = new Map([
       ['Space', () => this.togglePlayback()],
-      ['KeyZ', (event) => event.ctrlKey && this.undo()],
-      ['KeyY', (event) => event.ctrlKey && this.redo()],
-      ['KeyS', (event) => event.ctrlKey && this.save(event)],
+      ['KeyZ', event => event.ctrlKey && this.undo()],
+      ['KeyY', event => event.ctrlKey && this.redo()],
+      ['KeyS', event => event.ctrlKey && this.save(event)],
       ['Escape', () => this.closeModals()]
     ]);
 
-    document.addEventListener('keydown', (event) => {
+    document.addEventListener('keydown', event => {
       const handler = shortcuts.get(event.code);
       if (handler) {
         // Prevent default only if not in input field
@@ -225,10 +225,10 @@ export class UIManager {
     // Initialize sliders with modern range input handling
     this.initializeSlider('tempoSlider', 60, 200, 120);
     this.initializeSlider('swingSlider', 0, 100, 0);
-    
+
     // Initialize checkboxes
     this.initializeCheckboxes();
-    
+
     // Initialize dropdowns
     this.initializeDropdowns();
   }
@@ -239,7 +239,7 @@ export class UIManager {
       slider.min = min;
       slider.max = max;
       slider.value = defaultValue;
-      
+
       // Add visual feedback
       this.updateSliderBackground(slider);
       slider.addEventListener('input', () => this.updateSliderBackground(slider));

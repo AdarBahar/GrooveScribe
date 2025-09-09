@@ -438,7 +438,7 @@
                                     const barSec = getBarSec();
                                     const perIdxSec = barSec / cache.length;
                                     const ahead = Math.min(this._schedAheadSec, barSec);
-                                    while (true) {
+                                    for (;;) {
                                         const idxTime = this._schedBarStartCtx + this._schedNextIndex * perIdxSec;
                                     if (idxTime <= now + ahead) {
                                             // Schedule hits at this index

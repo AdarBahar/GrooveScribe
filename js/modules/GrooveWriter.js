@@ -11,14 +11,14 @@ export class GrooveWriter {
     this.undoStack = [];
     this.redoStack = [];
     this.maxUndoStackSize = 40;
-    
+
     // Groove state
     this.numberOfMeasures = 1;
     this.timeDivision = parseInt(this.myGrooveUtils.getQueryVariableFromURL('Div', '16'), 10);
     this.numBeatsPerMeasure = 4;
     this.noteValuePerMeasure = 4;
     this.notesPerMeasure = this.calculateNotesPerMeasure();
-    
+
     // Metronome state
     this.metronomeAutoSpeedUpActive = false;
     this.metronomeCountInActive = false;
@@ -26,31 +26,29 @@ export class GrooveWriter {
     this.metronomeFrequency = 0;
     this.metronomeOffsetClickStart = '1';
     this.metronomeSolo = false;
-    
+
     // UI state
     this.advancedEditMode = false;
     this.permutationType = 'none';
     this.editingGrooveId = null;
-    
+
     // Auto speed up state
     this.midiStartTime = null;
     this.midiStartTempo = 0;
     this.lastMidiTempoIncreaseTime = null;
     this.lastMidiTempoIncreaseRemainder = 0;
-    
+
     this.initialize();
   }
 
   initialize() {
     // Set debug mode immediately for use in index.html
-    this.myGrooveUtils.debugMode = parseInt(
-      this.myGrooveUtils.getQueryVariableFromURL('Debug', '0'), 
-      10
-    ) === 1;
-    
+    this.myGrooveUtils.debugMode =
+      parseInt(this.myGrooveUtils.getQueryVariableFromURL('Debug', '0'), 10) === 1;
+
     // Initialize from URL parameters
     this.loadFromURL();
-    
+
     // Set up event callbacks
     this.setupEventCallbacks();
   }
@@ -65,7 +63,7 @@ export class GrooveWriter {
 
   loadFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
-    
+
     // Load time signature
     const timeSig = urlParams.get('TimeSig');
     if (timeSig) {
@@ -76,14 +74,14 @@ export class GrooveWriter {
         this.notesPerMeasure = this.calculateNotesPerMeasure();
       }
     }
-    
+
     // Load other parameters
     this.numberOfMeasures = parseInt(urlParams.get('Measures') || '1', 10);
-    
+
     // Load tempo and swing
     const tempo = parseInt(urlParams.get('Tempo') || '120', 10);
     const swing = parseInt(urlParams.get('Swing') || '0', 10);
-    
+
     this.myGrooveUtils.setTempo(tempo);
     this.myGrooveUtils.setSwing(swing);
   }
@@ -91,22 +89,22 @@ export class GrooveWriter {
   setupEventCallbacks() {
     // Set up MIDI event callbacks
     this.myGrooveUtils.midiEventCallbacks = {
-      loadMidiDataEvent: (root, playStarting) => {
+      loadMidiDataEvent: (_root, playStarting) => {
         this.handleMidiDataLoad(playStarting);
       },
-      notePlaying: (root, noteType, percentComplete) => {
+      notePlaying: (_root, noteType, percentComplete) => {
         this.handleNotePlaying(noteType, percentComplete);
       },
-      playEvent: (root) => {
+      playEvent: (_root) => {
         this.handlePlayEvent();
       },
-      stopEvent: (root) => {
+      stopEvent: (_root) => {
         this.handleStopEvent();
       },
-      pauseEvent: (root) => {
+      pauseEvent: (_root) => {
         this.handlePauseEvent();
       },
-      midiInitialized: (root) => {
+      midiInitialized: (_root) => {
         this.handleMidiInitialized();
       }
     };
@@ -115,7 +113,7 @@ export class GrooveWriter {
   // Event handlers
   handleMidiDataLoad(playStarting) {
     let midiURL;
-    
+
     if (playStarting && this.metronomeCountInActive) {
       midiURL = this.myGrooveUtils.buildMidiUrlCountInTrack(
         this.numBeatsPerMeasure,
@@ -131,7 +129,7 @@ export class GrooveWriter {
       midiURL = this.createMidiUrlFromClickableUI('our_MIDI');
       this.myGrooveUtils.midiResetNoteHasChanged();
     }
-    
+
     this.myGrooveUtils.loadMIDIFromURL(midiURL);
     this.updateGrooveDBSource();
   }
@@ -141,7 +139,7 @@ export class GrooveWriter {
       this.myGrooveUtils.midiNoteHasChanged();
       this.metronomeAutoSpeedUpTempoUpdate();
     }
-    
+
     this.highlightNote(noteType, percentComplete);
   }
 
@@ -167,31 +165,39 @@ export class GrooveWriter {
 
   // UI update methods
   updatePlayButtonStates(state) {
-    const playButton = document.getElementById(`midiPlayImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`);
-    const playPlusButton = document.getElementById(`midiPlayPlusImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`);
-    
+    const playButton = document.getElementById(
+      `midiPlayImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`
+    );
+    const playPlusButton = document.getElementById(
+      `midiPlayPlusImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`
+    );
+
     if (playButton) {
       playButton.className = `midiPlayImage ${state.charAt(0).toUpperCase() + state.slice(1)}`;
     }
-    
+
     if (playPlusButton) {
       playPlusButton.className = `midiPlayPlusImage ${state.charAt(0).toUpperCase() + state.slice(1)}`;
     }
   }
 
   enablePlayButtons() {
-    const playButton = document.getElementById(`midiPlayImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`);
-    const playPlusButton = document.getElementById(`midiPlayPlusImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`);
-    
+    const playButton = document.getElementById(
+      `midiPlayImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`
+    );
+    const playPlusButton = document.getElementById(
+      `midiPlayPlusImage${this.myGrooveUtils.grooveUtilsUniqueIndex}`
+    );
+
     if (playButton) {
-      playButton.onclick = (event) => {
+      playButton.onclick = (_event) => {
         this.myGrooveUtils.lastClickedButton = 'normal';
         this.myGrooveUtils.startOrStopMIDI_playback();
       };
     }
-    
+
     if (playPlusButton) {
-      playPlusButton.onclick = (event) => {
+      playPlusButton.onclick = (_event) => {
         this.myGrooveUtils.startAutoSpeedUpPlayback();
       };
     }
@@ -202,14 +208,18 @@ export class GrooveWriter {
     this.metronomeAutoSpeedUpActive = true;
     this.addOrRemoveKeywordFromClassById('metronomeOptionsContextMenuSpeedUp', 'menuChecked', true);
     this.metronomeOptionsMenuSetSelectedState();
-    console.log('Auto Speed Up enabled via Play+ button');
+    if (window.__GS_DEBUG__) console.log('Auto Speed Up enabled via Play+ button');
   }
 
   disableAutoSpeedUp() {
     this.metronomeAutoSpeedUpActive = false;
-    this.addOrRemoveKeywordFromClassById('metronomeOptionsContextMenuSpeedUp', 'menuChecked', false);
+    this.addOrRemoveKeywordFromClassById(
+      'metronomeOptionsContextMenuSpeedUp',
+      'menuChecked',
+      false
+    );
     this.metronomeOptionsMenuSetSelectedState();
-    console.log('Auto Speed Up disabled via regular Play button');
+    if (window.__GS_DEBUG__) console.log('Auto Speed Up disabled via regular Play button');
   }
 
   metronomeAutoSpeedUpTempoUpdate() {
@@ -218,44 +228,45 @@ export class GrooveWriter {
     if (amountElement) {
       totalTempoIncreaseAmount = parseInt(amountElement.value, 10);
     }
-    
+
     let tempoIncreaseInterval = 60;
     const intervalElement = document.getElementById('metronomeAutoSpeedupTempoIncreaseInterval');
     if (intervalElement) {
       tempoIncreaseInterval = parseInt(intervalElement.value, 10) * 60; // convert to seconds
     }
-    
+
     let keepIncreasingForever = false;
     const keepIncreasingElement = document.getElementById('metronomeAutoSpeedUpKeepGoingForever');
     if (keepIncreasingElement) {
       keepIncreasingForever = keepIncreasingElement.checked;
     }
-    
+
     const currentTempo = this.myGrooveUtils.getTempo();
     const midiStartTime = this.myGrooveUtils.getMidiStartTime();
-    
+
     if (this.midiStartTime !== midiStartTime) {
       this.midiStartTime = midiStartTime;
       this.midiStartTempo = currentTempo;
       this.lastMidiTempoIncreaseTime = null;
       this.lastMidiTempoIncreaseRemainder = 0;
     }
-    
+
     const currentTime = new Date().getTime() / 1000;
     const elapsedTime = currentTime - this.midiStartTime;
-    
+
     if (elapsedTime > tempoIncreaseInterval) {
       const numberOfIncreases = Math.floor(elapsedTime / tempoIncreaseInterval);
-      
-      if (!this.lastMidiTempoIncreaseTime || 
-          (this.lastMidiTempoIncreaseTime + tempoIncreaseInterval) <= currentTime) {
-        
+
+      if (
+        !this.lastMidiTempoIncreaseTime ||
+        this.lastMidiTempoIncreaseTime + tempoIncreaseInterval <= currentTime
+      ) {
         if (keepIncreasingForever || numberOfIncreases === 1) {
           const newTempo = currentTempo + totalTempoIncreaseAmount;
           this.myGrooveUtils.setTempo(newTempo);
           this.lastMidiTempoIncreaseTime = currentTime;
-          
-          console.log(`Auto Speed Up: ${currentTempo} -> ${newTempo} BPM`);
+
+          if (window.__GS_DEBUG__) console.log(`Auto Speed Up: ${currentTempo} -> ${newTempo} BPM`);
         }
       }
     }
@@ -267,31 +278,31 @@ export class GrooveWriter {
     if (popup) {
       popup.style.display = 'block';
     }
-    
+
     // Load defaults if they exist
     const defaults = this.loadAutoSpeedUpDefaults();
     if (defaults) {
       const amountElement = document.getElementById('metronomeAutoSpeedupTempoIncreaseAmount');
       const intervalElement = document.getElementById('metronomeAutoSpeedupTempoIncreaseInterval');
       const keepGoingElement = document.getElementById('metronomeAutoSpeedUpKeepGoingForever');
-      
+
       if (amountElement) amountElement.value = defaults.bpmAmount;
       if (intervalElement) intervalElement.value = defaults.intervalMinutes;
       if (keepGoingElement) keepGoingElement.checked = defaults.keepIncreasing;
     }
-    
+
     this.updateAutoSpeedUpOutputLabels();
   }
 
-  closeMetronomeAutoSpeedupConfiguration(type) {
+  closeMetronomeAutoSpeedupConfiguration(_type) {
     const popup = document.getElementById('metronomeAutoSpeedupConfiguration');
-    
+
     // Save as default if checkbox is checked
     const setAsDefaultCheckbox = document.getElementById('metronomeAutoSpeedUpSetAsDefault');
     if (setAsDefaultCheckbox && setAsDefaultCheckbox.checked) {
       this.saveAutoSpeedUpDefaults();
     }
-    
+
     if (popup) {
       popup.style.display = 'none';
     }
@@ -301,15 +312,15 @@ export class GrooveWriter {
     const amountElement = document.getElementById('metronomeAutoSpeedupTempoIncreaseAmount');
     const intervalElement = document.getElementById('metronomeAutoSpeedupTempoIncreaseInterval');
     const keepGoingElement = document.getElementById('metronomeAutoSpeedUpKeepGoingForever');
-    
+
     const defaults = {
       bpmAmount: amountElement ? parseInt(amountElement.value, 10) : 5,
       intervalMinutes: intervalElement ? parseInt(intervalElement.value, 10) : 2,
       keepIncreasing: keepGoingElement ? keepGoingElement.checked : false
     };
-    
+
     this.myGrooveUtils.saveToLocalStorage('autoSpeedUpDefaults', defaults);
-    console.log('Auto Speed Up defaults saved:', defaults);
+    if (window.__GS_DEBUG__) console.log('Auto Speed Up defaults saved:', defaults);
   }
 
   loadAutoSpeedUpDefaults() {
@@ -320,12 +331,14 @@ export class GrooveWriter {
     const amountElement = document.getElementById('metronomeAutoSpeedupTempoIncreaseAmount');
     const intervalElement = document.getElementById('metronomeAutoSpeedupTempoIncreaseInterval');
     const amountOutput = document.getElementById('metronomeAutoSpeedupTempoIncreaseAmountOutput');
-    const intervalOutput = document.getElementById('metronomeAutoSpeedupTempoIncreaseIntervalOutput');
-    
+    const intervalOutput = document.getElementById(
+      'metronomeAutoSpeedupTempoIncreaseIntervalOutput'
+    );
+
     if (amountElement && amountOutput) {
       amountOutput.textContent = amountElement.value;
     }
-    
+
     if (intervalElement && intervalOutput) {
       intervalOutput.textContent = intervalElement.value;
     }
@@ -346,9 +359,11 @@ export class GrooveWriter {
   metronomeOptionsMenuSetSelectedState() {
     const optionsAnchor = document.getElementById('metronomeOptionsAnchor');
     if (optionsAnchor) {
-      if (this.myGrooveUtils.getMetronomeSolo() ||
-          this.metronomeAutoSpeedUpActive ||
-          this.myGrooveUtils.getMetronomeOffsetClickStart() !== '1') {
+      if (
+        this.myGrooveUtils.getMetronomeSolo() ||
+        this.metronomeAutoSpeedUpActive ||
+        this.myGrooveUtils.getMetronomeOffsetClickStart() !== '1'
+      ) {
         optionsAnchor.classList.add('selected');
       } else {
         optionsAnchor.classList.remove('selected');
