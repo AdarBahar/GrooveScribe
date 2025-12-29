@@ -2991,19 +2991,21 @@ function GrooveUtils() {
 		var FullNoteSnareArray = root.scaleNoteArrayToFullSize(myGrooveData.snare_array, myGrooveData.numberOfMeasures, myGrooveData.notesPerMeasure, myGrooveData.numBeats, myGrooveData.noteValue);
 		var FullNoteKickArray = root.scaleNoteArrayToFullSize(myGrooveData.kick_array, myGrooveData.numberOfMeasures, myGrooveData.notesPerMeasure, myGrooveData.numBeats, myGrooveData.noteValue);
 
+		// Scale toms arrays for ALL measures (same as HH/Snare/Kick above)
+		var FullNoteTomsArrays = [];
+		for(var i = 0; i < constant_NUMBER_OF_TOMS; i++) {
+			FullNoteTomsArrays[i] = root.scaleNoteArrayToFullSize(myGrooveData.toms_array[i], myGrooveData.numberOfMeasures, myGrooveData.notesPerMeasure, myGrooveData.numBeats, myGrooveData.noteValue);
+		}
+
 		// the midi functions expect just one measure at a time to work correctly
 		// call once for each measure
     var measure_notes = FullNoteHHArray.length / myGrooveData.numberOfMeasures;
     for (var measureIndex = 0; measureIndex < myGrooveData.numberOfMeasures; measureIndex++) {
 
+      // Slice the toms arrays for this measure (same as HH/Snare/Kick)
       var FullNoteTomsArray = [];
       for(var i = 0; i < constant_NUMBER_OF_TOMS; i++) {
-      	var orig_measure_notes = myGrooveData.notesPerMeasure;
-        FullNoteTomsArray[i] = root.scaleNoteArrayToFullSize(myGrooveData.toms_array[i].slice(orig_measure_notes*measureIndex, orig_measure_notes*(measureIndex+1)),
-																														 1,
-																														 myGrooveData.notesPerMeasure,
-																														 myGrooveData.numBeats,
-																														 myGrooveData.noteValue);
+        FullNoteTomsArray[i] = FullNoteTomsArrays[i].slice(measure_notes*measureIndex, measure_notes*(measureIndex+1));
       }
 
       root.MIDI_from_HH_Snare_Kick_Arrays(midiTrack,
