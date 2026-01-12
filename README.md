@@ -1,3 +1,18 @@
+> ⚠️ **Project Status Notice - Januaray 2026** 
+>
+> This repository is based on a codebase that is approximately **7–10 years old**.  
+> While I initially attempted to fix and modernize it in this fork, the technical debt and legacy architecture made continued iteration impractical.
+>
+> As a result, the project has been **rebuilt from scratch using modern frameworks and approaches**.
+>
+> 👉 **The actively maintained successor project is here:**  
+> https://github.com/AdarBahar/groovy
+>
+> This repository is kept for historical reference only.
+
+
+
+
 # 🥁 GrooveScribe - Enhanced Fork
 
 **Professional Drum Notation, Groove Creation & Practice Tool**
