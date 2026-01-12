@@ -1,4 +1,4 @@
-> ⚠️ **Project Status Notice - Januaray 2026** 
+> ⚠️ **Project Status Notice - January 2026** 
 >
 > This repository is based on a codebase that is approximately **7–10 years old**.  
 > While I initially attempted to fix and modernize it in this fork, the technical debt and legacy architecture made continued iteration impractical.
